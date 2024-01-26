@@ -77,6 +77,12 @@ extern FDCAN_HandleTypeDef hfdcan2;
 #define CAN2_PHAL_3				13
 #define CAN2_PHAL_4				14
 
+
+// FOR SAMPLING DIAL INDICATORS
+#define CAN2_DIAL				15
+#define MM_MAX 14.0f
+
+
 // raw pressure sensors
 #define CAN2_RAW_BMP_1			15
 #define CAN2_RAW_BMP_2			16

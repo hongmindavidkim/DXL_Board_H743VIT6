@@ -24,6 +24,10 @@ extern uint16_t phal2[3];
 extern uint16_t phal3[3];
 extern uint16_t phal4[3];
 
+// FOR SAMPLING DIAL INDICATORS
+extern float dial_data[2];
+extern uint16_t dial_ints[4];
+
 /// CAN Reply Packet Structure ///
 /// 16 bit position, between -4*pi and 4*pi
 /// 12 bit velocity, between -30 and + 30 rad/s
@@ -137,7 +141,19 @@ void pack_reply48_sens(uint8_t *fdmsg, float * force_data_1, float * force_data_
 
 	// TODO: 12 bits per FSR message, so each sensor should take 8+12+12=32bits=4bytes
 
-	// palm: 26, 27, 28, 29
+//	// FOR SAMPLING DIAL INDICATORS
+//	// DISPLACING PALM DATA
+//	uint16_t dial1_int = float_to_uint(dial_data[0], -MM_MAX, MM_MAX, 16);
+//	uint16_t dial2_int = float_to_uint(dial_data[1], -MM_MAX, MM_MAX, 16);
+//
+////	printf("%d, %d\n\r", dial1_int, dial2_int);
+//
+//	fdmsg[26] = dial_ints[0]; //(dial1_int>>8);
+//	fdmsg[27] = dial_ints[1]; //(dial1_int&0xFF);
+//	fdmsg[28] = dial_ints[2]; //(dial2_int>>8);
+//	fdmsg[29] = dial_ints[3]; //(dial2_int&0xFF);
+
+//	// palm: 26, 27, 28, 29
     fdmsg[26] = palm[0];
     fdmsg[27] = palm[1]>>4; // 8 msbs of FSR1
 	fdmsg[28] = ((palm[1]&0x0F)<<4)|((palm[2]>>8)); // 4 lsbs of FSR1 and 4 msbs of FSR2

@@ -48,28 +48,17 @@ uint8_t sense_rx_buf[8]; // TODO: could make this shorter?
 /* Initialization */
 XM430_bus dxl_bus_1(&huart1, RTS1_GPIO_Port, RTS1_Pin);
 XM430_bus dxl_bus_2(&huart2, RTS2_GPIO_Port, RTS2_Pin);
-XM430_bus dxl_bus_3(&huart7, RTS7_GPIO_Port, RTS7_Pin);
-XM430_bus dxl_bus_4(&huart5, RTS5_GPIO_Port, RTS5_Pin); // use just for wrist motor? // getting weird
 
-uint8_t dxl_IDs[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-uint8_t dxl_ID[] =  {1, 2, 3}; //, 4, 5, 6, 7, 8, 9};
-uint8_t dxl_ID2[] = {5, 6, 7};
-uint8_t dxl_IDPC[] = {4, 8};
-uint8_t dxl_IDWR[] = {9};
+uint8_t dxl_IDs[] = {1, 2, 3, 4};
+uint8_t dxl_ID[] =  {1, 2}; //, 4, 5, 6, 7, 8, 9};
+uint8_t dxl_ID2[] = {3, 4};
 uint8_t idLength = sizeof(dxl_ID) / sizeof(dxl_ID[0]);
 uint8_t idLength2 = sizeof(dxl_ID2) / sizeof(dxl_ID2[0]);
-uint8_t idLengthPC = 2;
-uint8_t idLengthWR = 1;
-
 
 volatile uint8_t tx_flag_1;
 volatile uint8_t tx_flag_2;
-volatile uint8_t tx_flag_3;
-volatile uint8_t tx_flag_5;
 volatile uint8_t rx_flag_1;
 volatile uint8_t rx_flag_2;
-volatile uint8_t rx_flag_3;
-volatile uint8_t rx_flag_5;
 
 // Variables for force sensor data
 int32_t pressure_raw1[8];
@@ -91,6 +80,10 @@ ForceSensor forcesensor1(0, &sensorB3);
 extern NeuralNet sensorB4;
 ForceSensor forcesensor2(1, &sensorB4);
 
+
+// FOR SAMPLING DIAL INDICATORS
+float dial_data[2];
+uint16_t dial_ints[4];
 
 // Variables for dynamixel bus
 uint32_t goalDes1[4];
@@ -197,10 +190,6 @@ void GetBulkData_DMA()
 	dxl_bus_1.rPacketLength = 8 + idLength*(4+data_len);
 	dxl_bus_2.sRead(data_len, start_addr, dxl_ID2, idLength2);
 	dxl_bus_2.rPacketLength = 8 + idLength2*(4+data_len);
-	dxl_bus_3.sRead(data_len, start_addr, dxl_IDPC, idLengthPC);
-	dxl_bus_3.rPacketLength = 8 + idLengthPC*(4+data_len);
-	dxl_bus_4.sRead(data_len, start_addr, dxl_IDWR, idLengthWR);
-	dxl_bus_4.rPacketLength = 8 + idLengthWR*(4+data_len);
 	// DMA transmissions
 	tx_flag_1 = 0;
 	rx_flag_1 = 0;
@@ -208,44 +197,13 @@ void GetBulkData_DMA()
 	tx_flag_2 = 0;
 	rx_flag_2 = 0;
 
-	tx_flag_3 = 0;
-	rx_flag_3 = 0;
-
-	tx_flag_5 = 0;
-	rx_flag_5 = 0;
-
-//	dxl_bus_1.sendIPacket_DMA();
-//	while(!tx_flag_1){;}
-//	dxl_bus_1.getRPacket_DMA();
-//	while(!rx_flag_1){;}
-//
-//	dxl_bus_2.sendIPacket_DMA();
-//	while(!tx_flag_2){;}
-//	dxl_bus_2.getRPacket_DMA();
-//	while(!rx_flag_2){;}
-//
-//	dxl_bus_3.sendIPacket_DMA();
-//	while(!tx_flag_3){;}
-//	dxl_bus_3.getRPacket_DMA();
-//	while(!rx_flag_3){;}
-//
-//	dxl_bus_4.sendIPacket_DMA();
-//	while(!tx_flag_5){;}
-//	dxl_bus_4.getRPacket_DMA();
-//	while(!rx_flag_5){;}
-
 	dxl_bus_1.sendIPacket_DMA();
 	dxl_bus_2.sendIPacket_DMA();
-	dxl_bus_3.sendIPacket_DMA();
-	dxl_bus_4.sendIPacket_DMA();
-	while((!tx_flag_1)||(!tx_flag_2)||(!tx_flag_3)||(!tx_flag_5)){;}
+	while((!tx_flag_1)||(!tx_flag_2)){;}
 	dxl_bus_1.getRPacket_DMA();
 	dxl_bus_2.getRPacket_DMA();
-	dxl_bus_3.getRPacket_DMA();
-	dxl_bus_4.getRPacket_DMA();
-	while((!rx_flag_1)||(!rx_flag_2)||(!rx_flag_3)||(!rx_flag_5)){;}
+	while((!rx_flag_1)||(!rx_flag_2)){;}
 
-//	while((rx_flag_1==0)||(rx_flag_2==0)||(rx_flag_6==0)||(rx_flag_7==0)){;}
 	// for loop to extract ret_vals from rPackets
 	int i = 10;
 	uint8_t ret_vals1[data_len]; // could make this a 2D array?
@@ -277,103 +235,8 @@ void GetBulkData_DMA()
 		dxl_position[h] = (int32_t) ((uint32_t)ret_vals2[6] | (((uint32_t)ret_vals2[7]<<8)&0x0000FF00) | (((uint32_t)ret_vals2[8]<<16)&0x00FF0000) | (((uint32_t)ret_vals2[9]<<24)&0xFF000000));
 		i+=4; // increment for next ID in rPacket
 	}
-	i = 10; // reset index
-	uint8_t ret_vals3[data_len]; // could make this a 2D array?
-	for(int j=0; j<idLengthPC; j++){ // for each ID
-		// pull data out from rPacket
-		for (int k=0; k<data_len; k++){
-			ret_vals3[k] = dxl_bus_3.rPacket[i];
-			i++;
-		}
-		// pack dxl variables
-		int h = dxl_IDPC[j]-1;
-		dxl_current[h] = (int16_t) ((uint16_t)ret_vals3[0] | (((uint16_t)ret_vals3[1]<<8)&0xFF00));
-		dxl_velocity[h] = (int32_t) ((uint32_t)ret_vals3[2] | (((uint32_t)ret_vals3[3]<<8)&0x0000FF00) | (((uint32_t)ret_vals3[4]<<16)&0x00FF0000) | (((uint32_t)ret_vals3[5]<<24)&0xFF000000));
-		dxl_position[h] = (int32_t) ((uint32_t)ret_vals3[6] | (((uint32_t)ret_vals3[7]<<8)&0x0000FF00) | (((uint32_t)ret_vals3[8]<<16)&0x00FF0000) | (((uint32_t)ret_vals3[9]<<24)&0xFF000000));
-		i+=4; // increment for next ID in rPacket
-	}
-	i = 10; // reset index
-	uint8_t ret_vals4[data_len]; // could make this a 2D array?
-	for(int j=0; j<idLengthWR; j++){ // for each ID
-		// pull data out from rPacket
-		for (int k=0; k<data_len; k++){
-			ret_vals4[k] = dxl_bus_4.rPacket[i];
-			i++;
-		}
-		// pack dxl variables
-		int h = dxl_IDWR[j]-1;
-		dxl_current[h] = (int16_t) ((uint16_t)ret_vals4[0] | (((uint16_t)ret_vals4[1]<<8)&0xFF00));
-		dxl_velocity[h] = (int32_t) ((uint32_t)ret_vals4[2] | (((uint32_t)ret_vals4[3]<<8)&0x0000FF00) | (((uint32_t)ret_vals4[4]<<16)&0x00FF0000) | (((uint32_t)ret_vals4[5]<<24)&0xFF000000));
-		dxl_position[h] = (int32_t) ((uint32_t)ret_vals4[6] | (((uint32_t)ret_vals4[7]<<8)&0x0000FF00) | (((uint32_t)ret_vals4[8]<<16)&0x00FF0000) | (((uint32_t)ret_vals4[9]<<24)&0xFF000000));
-		i+=4; // increment for next ID in rPacket
-	}
 
 }
-
-
-//void SetCurrentCommands_DMA()
-//{
-//    uint8_t num_params1 = idLength*3; // 1 for ID + 2 for data length
-//    uint8_t parameter1[num_params1];
-//    uint8_t num_params2 = idLength2*3; // 1 for ID + 2 for data length
-//	uint8_t parameter2[num_params2];
-//	uint8_t num_params3 = idLengthPC*3; // 1 for ID + 2 for data length
-//	uint8_t parameter3[num_params3];
-//	uint8_t num_params4 = idLengthWR*3; // 1 for ID + 2 for data length
-//	uint8_t parameter4[num_params4];
-//
-//    for (int i=0; i<idLength; i++){
-//    	int j = i*3;
-//		int k = dxl_ID[i]-1;
-//		uint32_t cur = cur_command[k];
-//		parameter1[j]    = (uint8_t) k;
-//		parameter1[j+1] = SHIFT_TO_LSB(cur);
-//		parameter1[j+2] = SHIFT_TO_MSB(cur);
-//	}
-//    for (int i=0; i<idLength2; i++){
-//    	int j = i*3;
-//		int k = dxl_ID2[i]-1;
-//		uint32_t cur = cur_command[k];
-//		parameter2[j]    = (uint8_t) k;
-//		parameter2[j+1] = SHIFT_TO_LSB(cur);
-//		parameter2[j+2] = SHIFT_TO_MSB(cur);
-//	}
-//    for (int i=0; i<idLengthPC; i++){
-//		int j = i*3;
-//		int k = dxl_IDPC[i]-1;
-//		uint32_t cur = cur_command[k];
-//		parameter3[j]    = (uint8_t) k;
-//		parameter3[j+1] = SHIFT_TO_LSB(cur);
-//		parameter3[j+2] = SHIFT_TO_MSB(cur);
-//	}
-//    for (int i=0; i<idLengthWR; i++){
-//    	int j = i*3;
-//		int k = dxl_IDWR[i]-1;
-//		uint32_t cur = cur_command[k];
-//		parameter4[j]   = (uint8_t) k;
-//		parameter4[j+1] = SHIFT_TO_LSB(cur);
-//		parameter4[j+2] = SHIFT_TO_MSB(cur);
-//	}
-//
-//    dxl_bus_1.sWrite(2, FF_CUR_OFST, parameter1, num_params1);
-//    dxl_bus_2.sWrite(2, FF_CUR_OFST, parameter2, num_params2);
-//    dxl_bus_3.sWrite(2, FF_CUR_OFST, parameter3, num_params3);
-//    dxl_bus_4.sWrite(2, FF_CUR_OFST, parameter4, num_params4);
-//    tx_flag_1 = 0;
-//	tx_flag_2 = 0;
-//	tx_flag_3 = 0;
-//	tx_flag_5 = 0;
-//    dxl_bus_1.sendIPacket_DMA();
-//    while(!tx_flag_1){;}
-//	dxl_bus_2.sendIPacket_DMA();
-//	while(!tx_flag_2){;}
-//	dxl_bus_3.sendIPacket_DMA();
-//	while(!tx_flag_3){;}
-//	dxl_bus_4.sendIPacket_DMA();
-//	while(!tx_flag_5){;}
-//
-//}
-
 
 void SetFullControlCommands_DMA()
 {
@@ -381,10 +244,6 @@ void SetFullControlCommands_DMA()
     uint8_t parameter1[num_params1];
     uint8_t num_params2 = idLength2*15; // 1 for ID + 14 for data length
 	uint8_t parameter2[num_params2];
-	uint8_t num_params3 = idLengthPC*15; // 1 for ID + 14 for data length
-	uint8_t parameter3[num_params3];
-	uint8_t num_params4 = idLengthWR*15; // 1 for ID + 14 for data length
-	uint8_t parameter4[num_params4];
 
     for (int i=0; i<idLength; i++){
     	int j = i*15;
@@ -434,71 +293,15 @@ void SetFullControlCommands_DMA()
 		parameter2[j+13] = SHIFT_TO_LSB(cur);
 		parameter2[j+14] = SHIFT_TO_MSB(cur);
 	}
-    for (int i=0; i<idLengthPC; i++){
-		int j = i*15;
-		int k = dxl_IDPC[i]-1;
-		uint32_t pos = pos_command[k];
-		uint32_t vel = vel_command[k];
-		uint32_t cur = cur_command[k];
-		uint32_t kp = kp_command[k];
-		uint32_t kd = kd_command[k];
-		parameter3[j]    = dxl_IDPC[i];
-		parameter3[j+1]  = SHIFT_TO_LSB(kp);
-		parameter3[j+2]  = SHIFT_TO_MSB(kp);
-		parameter3[j+3]  = SHIFT_TO_LSB(kd);
-		parameter3[j+4]  = SHIFT_TO_MSB(kd);
-		parameter3[j+5]  = (uint8_t) (pos&0x00000FF);
-		parameter3[j+6]  = (uint8_t) ((pos&0x0000FF00)>>8);
-		parameter3[j+7]  = (uint8_t) ((pos&0x00FF0000)>>16);
-		parameter3[j+8]  = (uint8_t) (pos>>24);
-		parameter3[j+9]  = (uint8_t) (vel&0x00000FF);
-		parameter3[j+10] = (uint8_t) ((vel&0x0000FF00)>>8);
-		parameter3[j+11] = (uint8_t) ((vel&0x00FF0000)>>16);
-		parameter3[j+12] = (uint8_t) (vel>>24);
-		parameter3[j+13] = SHIFT_TO_LSB(cur);
-		parameter3[j+14] = SHIFT_TO_MSB(cur);
-	}
-    for (int i=0; i<idLengthWR; i++){
-    	int j = i*15;
-		int k = dxl_IDWR[i]-1;
-		uint32_t pos = pos_command[k];
-		uint32_t vel = vel_command[k];
-		uint32_t cur = cur_command[k];
-		uint32_t kp = kp_command[k];
-		uint32_t kd = kd_command[k];
-		parameter4[j]    = dxl_IDWR[i];
-		parameter4[j+1]  = SHIFT_TO_LSB(kp);
-		parameter4[j+2]  = SHIFT_TO_MSB(kp);
-		parameter4[j+3]  = SHIFT_TO_LSB(kd);
-		parameter4[j+4]  = SHIFT_TO_MSB(kd);
-		parameter4[j+5]  = (uint8_t) (pos&0x00000FF);
-		parameter4[j+6]  = (uint8_t) ((pos&0x0000FF00)>>8);
-		parameter4[j+7]  = (uint8_t) ((pos&0x00FF0000)>>16);
-		parameter4[j+8]  = (uint8_t) (pos>>24);
-		parameter4[j+9]  = (uint8_t) (vel&0x00000FF);
-		parameter4[j+10] = (uint8_t) ((vel&0x0000FF00)>>8);
-		parameter4[j+11] = (uint8_t) ((vel&0x00FF0000)>>16);
-		parameter4[j+12] = (uint8_t) (vel>>24);
-		parameter4[j+13] = SHIFT_TO_LSB(cur);
-		parameter4[j+14] = SHIFT_TO_MSB(cur);
-	}
 
     dxl_bus_1.sWrite(14, CTRL_WRITE_START, parameter1, num_params1);
     dxl_bus_2.sWrite(14, CTRL_WRITE_START, parameter2, num_params2);
-    dxl_bus_3.sWrite(14, CTRL_WRITE_START, parameter3, num_params3);
-    dxl_bus_4.sWrite(14, CTRL_WRITE_START, parameter4, num_params4);
     tx_flag_1 = 0;
 	tx_flag_2 = 0;
-	tx_flag_3 = 0;
-	tx_flag_5 = 0;
     dxl_bus_1.sendIPacket_DMA();
 //  while(!tx_flag_1){;}
 	dxl_bus_2.sendIPacket_DMA();
 //	while(!tx_flag_2){;}
-	dxl_bus_3.sendIPacket_DMA();
-//	while(!tx_flag_3){;}
-	dxl_bus_4.sendIPacket_DMA();
-//	while(!tx_flag_5){;}
 
 }
 
@@ -792,50 +595,8 @@ int dxl_main(void)
 	// Setup Routine for Dynamixels
 	printf("Setting up Dynamixel bus.\n\r");
 	Dynamixel_Startup_Routine(SENSOR_DEBUG);
-	if (SENSOR_DEBUG) {
-		printf("Starting in sensor debug mode.\n\r");
+	if (SENSOR_DEBUG) {		printf("Starting in sensor debug mode.\n\r");
 	}
-
-
-//	if (CURR_CONTROL){
-//		for (int i=0; i<idLength; i++) {
-//			dxl_bus_1.SetVelocityProfile(dxl_ID[i], 414); // 414(94.81RPM) @ 14.8V, 330(75.57RPM) @ 12V
-//			dxl_bus_1.SetAccelerationProfile(dxl_ID[i], 100); // 80(17166) rev/min^2
-//			dxl_bus_1.SetPosPGain(dxl_ID[i], 800);
-//			dxl_bus_1.SetPosDGain(dxl_ID[i], 0);
-//			dxl_bus_1.SetGoalCurrent(dxl_ID[i], 1193);
-//			HAL_Delay(100);
-//		}
-//		for (int i=0; i<idLength2; i++) {
-//			dxl_bus_2.SetVelocityProfile(dxl_ID2[i], 414);
-//			dxl_bus_2.SetAccelerationProfile(dxl_ID2[i], 100);
-//			dxl_bus_2.SetPosPGain(dxl_ID2[i], 800);
-//			dxl_bus_2.SetPosDGain(dxl_ID2[i], 0);
-//			dxl_bus_2.SetGoalCurrent(dxl_ID[i], 1193);
-//			HAL_Delay(100);
-//		}
-//		for (int i=0; i<idLengthPC; i++) {
-//			dxl_bus_3.SetVelocityProfile(dxl_IDPC[i], 414);
-//			dxl_bus_3.SetAccelerationProfile(dxl_IDPC[i], 100);
-//			dxl_bus_3.SetPosPGain(dxl_IDPC[i], 800);
-//			dxl_bus_3.SetPosDGain(dxl_IDPC[i], 0);
-//			dxl_bus_3.SetGoalCurrent(dxl_ID[i], 1193);
-//			HAL_Delay(100);
-//		}
-//		for (int i=0; i<idLengthWR; i++) {
-//			dxl_bus_4.SetVelocityProfile(dxl_IDWR[i], 414);
-//			dxl_bus_4.SetAccelerationProfile(dxl_IDWR[i], 100);
-//			dxl_bus_4.SetPosPGain(dxl_IDWR[i], 800);
-//			dxl_bus_4.SetPosDGain(dxl_IDWR[i], 0);
-//			dxl_bus_4.SetGoalCurrent(dxl_ID[i], 2047);
-//			HAL_Delay(100);
-//		}
-//		dxl_bus_1.SetMultGoalPositions(dxl_ID, idLength, multiGoalPos_1);
-//		dxl_bus_2.SetMultGoalPositions(dxl_ID2, idLength2, multiGoalPos_2);
-//		dxl_bus_3.SetMultGoalPositions(dxl_IDPC, idLengthPC, multiGoalPos_3);
-//		dxl_bus_4.SetGoalPosition(9, 2048);
-//		HAL_Delay(100);
-//	}
 
 	// enable CAN Interrupts
 	HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);// Initialize CAN1 Rx0 Interrupt
@@ -864,7 +625,8 @@ int dxl_main(void)
 //				printf("Phalange 2: %d, %d, %d\n\r", phal2[0], phal2[1], phal2[2]);
 //				printf("Phalange 3: %d, %d, %d\n\r", phal3[0], phal3[1], phal3[2]);
 //				printf("Phalange 4: %d, %d, %d\n\r", phal4[0], phal4[1], phal4[2]);
-//				printf("Test: %d, %d, %d\n\r", palm[0], palm[1], palm[2]);
+				printf("Test: %d, %d, %d\n\r", palm[0], palm[1], palm[2]);
+//				printf("Dials: %f, %f\n\r", dial_data[0], dial_data[1]);
 //				printf("\n\r");
 			}
 			loop_count++;
@@ -957,13 +719,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	} else if(huart->Instance==USART2){
 //		printf("Rx 2 done!\n\r");
 		rx_flag_2 = 1;
-	} else if(huart->Instance==UART7){
-//		printf("Rx 3 done!\n\r");
-		rx_flag_3 = 1;
-	} else if(huart->Instance==UART5){
-//		printf("Rx 5 done!\n\r");
-		rx_flag_5 = 1;
 	}
+
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -977,14 +734,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 		HAL_GPIO_WritePin(RTS2_GPIO_Port, RTS2_Pin, GPIO_PIN_RESET);
 //		printf("Tx 2 done!\n\r");
 		tx_flag_2 = 1;
-	} else if(huart->Instance==UART7){
-		HAL_GPIO_WritePin(RTS7_GPIO_Port, RTS7_Pin, GPIO_PIN_RESET);
-//		printf("Tx 3 done!\n\r");
-		tx_flag_3 = 1;
-	} else if(huart->Instance==UART5){
-		HAL_GPIO_WritePin(RTS5_GPIO_Port, RTS5_Pin, GPIO_PIN_RESET);
-//		printf("Tx 5 done!\n\r");
-		tx_flag_5 = 1;
 	}
 }
 
@@ -1149,6 +898,23 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *canHandle, uint32_t RxFifo1I
 				phal4[1] = (sense_rx_buf[1]<<4)|((sense_rx_buf[2]&0xF0)>>4); // FSR 1
 				phal4[2] = ((sense_rx_buf[2]&0x0F)<<8)|sense_rx_buf[3]; // FSR 2
 			}
+
+
+//			// FOR SAMPLING DIAL INDICATORS
+//			else if (id == CAN2_DIAL){
+//
+//				uint16_t dial1_int = (sense_rx_buf[0]<<8)|sense_rx_buf[1];
+//				uint16_t dial2_int = (sense_rx_buf[2]<<8)|sense_rx_buf[3];
+//				dial_data[0] = uint_to_float(dial1_int, -MM_MAX, MM_MAX, 16);
+//				dial_data[1] = uint_to_float(dial2_int, -MM_MAX, MM_MAX, 16);
+//
+////				printf("%d, %f, %f\n\r", id, dial_data[0], dial_data[1]);
+//
+//				dial_ints[0] = sense_rx_buf[0];
+//				dial_ints[1] = sense_rx_buf[1];
+//				dial_ints[2] = sense_rx_buf[2];
+//				dial_ints[3] = sense_rx_buf[3];
+//			}
 			// pressure sensor message ids
 			// TODO: fix this!
 //			else if (id == CAN2_RAW_BMP_1){
