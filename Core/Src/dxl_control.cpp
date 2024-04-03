@@ -49,9 +49,9 @@ uint8_t sense_rx_buf[8]; // TODO: could make this shorter?
 XM430_bus dxl_bus_1(&huart1, RTS1_GPIO_Port, RTS1_Pin);
 XM430_bus dxl_bus_2(&huart2, RTS2_GPIO_Port, RTS2_Pin);
 
-uint8_t dxl_IDs[] = {1, 2, 3, 4};
-uint8_t dxl_ID[] =  {1, 2}; //, 4, 5, 6, 7, 8, 9};
-uint8_t dxl_ID2[] = {3, 4};
+uint8_t dxl_IDs[] = {5, 6, 7, 8}; //{1, 2, 3, 4};
+uint8_t dxl_ID[] =  {5, 6}; //, 4, 5, 6, 7, 8, 9};
+uint8_t dxl_ID2[] = {7, 8};
 uint8_t idLength = sizeof(dxl_ID) / sizeof(dxl_ID[0]);
 uint8_t idLength2 = sizeof(dxl_ID2) / sizeof(dxl_ID2[0]);
 
@@ -154,7 +154,7 @@ float desired_current[9];
 uint16_t current_command[9];
 
 // CAN command variables
-float dxl_pos_des[9] = {0.12f, 0.12f, 0.12f, 0.3f, -0.12f, -0.12f, -0.12f, 0.3f, 0.0f}; // TODO: why is this non-zero?
+float dxl_pos_des[9] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // TODO: why is this non-zero?
 float dxl_vel_des[9] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float dxl_tff_des[9] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float dxl_kp[9] = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
