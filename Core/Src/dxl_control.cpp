@@ -94,16 +94,33 @@ float currentVel[9];
 float currentCur[9];
 float currentJointTau[9];
 
-float Kt = 2.69f * (3.7f / 2.7f); // changed 2.0f to 2.69f
-float Ktinv = 1/Kt;
-float current_limit = 2.70f; //2.30f; // in A, max is 3.2(?)
+// OLD, based on stall point for XM430 motors
+//float Kt = 2.69f * (3.7f / 2.7f); // changed 2.0f to 2.69f
+//float Ktinv = 1/Kt;
+//float current_limit = 2.70f; //2.30f; // in A, max is 3.2(?)
 
-float Kt_WR = 2.69f * (8.9f / 5.5f); // changed 2.0f to 2.69f
+// updated Kt based on XM430 testing:
+// xm_kt_nom = 1.30 (3.0Nm at 2.3A at 12.0V)
+// xm_kt_fit = 1.67
+
+// updated Kt based on XH430 testing:
+// xh_kt_nom = 1.92 (2.5Nm at 1.3A at 12.0V)
+// xh_kt_fit = 3.14
+
+float Kt = 3.14f;
+float Ktinv = 1/Kt;
+float current_limit = 0.80f;
+
+float Kt_WR = (8.9f / 5.5f); // changed 2.0f to 2.69f
 float Ktinv_WR = 1.0f/Kt_WR;
 float current_limit_WR = 4.40f; // in A
 
 float pulse_to_rad = (2.0f*PI)/4096.0f; // = 0.001534
 float rpm_to_rads = (0.229f*2.0f*PI)/60.0f; // = 0.0239
+
+float cur_count_to_A = 2.69f/1000.0f;
+float cur_A_to_count = 1000.0f/2.69f;
+
 
 // from joint space to actuator space... phidot = Jact*thetadot
 float JactL[4][4] = { {(14.38f/14.38f), 0.0f, 0.0f, -(16.38f/15.98f)},
@@ -328,7 +345,7 @@ void updateBusses(){
 
 	for(int i=0; i<8; i++){
 		velData[i] = rpm_to_rads*(float)dxl_velocity[i];
-		motorTorques[i] = Kt*0.001f*(float)dxl_current[i];
+		motorTorques[i] = Kt*cur_count_to_A*(float)dxl_current[i]; //Kt*0.001f*(float)dxl_current[i];
 	}
 
 	// printf("Transforms...");
@@ -349,8 +366,8 @@ void updateBusses(){
 		currentVel[i] = (float)jointVelocities1[i];
 		currentPos[3+i] = (float)jointAngles2[i];
 		currentVel[3+i] = (float)jointVelocities2[i];
-		currentCur[i] = 0.001f*(float)dxl_current[i];
-		currentCur[3+i] = 0.001f*(float)dxl_current[4+i];
+		currentCur[i] = cur_count_to_A*(float)dxl_current[i]; //0.001f*(float)dxl_current[i];
+		currentCur[3+i] = cur_count_to_A*(float)dxl_current[4+i]; //.001f*(float)dxl_current[4+i];
 		currentJointTau[i] = (float)jointTorques1[i];
 		currentJointTau[3+i] = (float)jointTorques2[i];
 	}
@@ -358,15 +375,15 @@ void updateBusses(){
 	currentVel[6] = (float)jointVelocities1[3];
 	currentPos[7] = (float)jointAngles2[3];
 	currentVel[7] = (float)jointVelocities2[3];
-	currentCur[6] = 0.001f*(float)dxl_current[3];
-	currentCur[7] = 0.001f*(float)dxl_current[7];
+	currentCur[6] = cur_count_to_A*(float)dxl_current[3]; //0.001f*(float)dxl_current[3];
+	currentCur[7] = cur_count_to_A*(float)dxl_current[7]; //0.001f*(float)dxl_current[7];
 	currentJointTau[6] = (float)jointTorques1[3];
 	currentJointTau[7] = (float)jointTorques2[3];
 
 	currentPos[8] = (float(dxl_position[8])-2048.0f)*((2*PI/4096.0f)); // (float(x)-2048) * ((2*PI)/4096.0f)
 	currentVel[8] = rpm_to_rads*(float)dxl_velocity[8];
-	currentCur[8] = 0.001f*(float)dxl_current[8];
-	currentJointTau[8] = Kt_WR*0.001f*(float)dxl_current[8];
+	currentCur[8] = cur_count_to_A*(float)dxl_current[8]; //0.001f*(float)dxl_current[8];
+	currentJointTau[8] = Kt_WR*cur_count_to_A*(float)dxl_current[8]; //Kt_WR*0.001f*(float)dxl_current[8];
 
 	// calculate desired joint torques here, torques are in Nm
 	// printf("Desired joint torques...");
@@ -406,11 +423,11 @@ void updateBusses(){
 			// convert to desired currents
 			for(int i = 0; i<8; i++){
 				desired_current[i] = fmaxf(fminf( Ktinv*desired_actuator_torques[i], current_limit ), -current_limit );
-				current_command[i] = (int16_t)(1000.0f*desired_current[i]); // commanded current is in mA!
+				current_command[i] = (int16_t)(cur_A_to_count*desired_current[i]); //(int16_t)(1000.0f*desired_current[i]/2.69f); // commanded current is in mA!
 			}
 			// different parameters for wrist roll motor
 			desired_current[8] = fmaxf(fminf( Ktinv_WR*desired_actuator_torques[8], current_limit_WR), -current_limit_WR );
-			current_command[8] = (int16_t)(1000.0f*desired_current[8]);
+			current_command[8] = (int16_t)(cur_A_to_count*desired_current[8]); //(int16_t)(1000.0f*desired_current[8]/2.69f);
 
 		// 1. obtain desired actuator positions, velocities, and torques from joint data
 		// 2. convert gains, torques to correct units
