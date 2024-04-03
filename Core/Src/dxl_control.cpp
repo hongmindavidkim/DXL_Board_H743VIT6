@@ -154,7 +154,7 @@ float desired_current[9];
 uint16_t current_command[9];
 
 // CAN command variables
-float dxl_pos_des[9] = {0.12f, 0.12f, 0.12f, 0.3f, -0.12f, -0.12f, -0.12f, 0.3f, 0.0f}; // TODO: why is this non-zero?
+float dxl_pos_des[9] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float dxl_vel_des[9] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float dxl_tff_des[9] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float dxl_kp[9] = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
