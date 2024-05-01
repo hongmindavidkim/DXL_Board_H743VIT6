@@ -509,8 +509,8 @@ void sendCAN(){
 	pack_reply48_joints(txMsg_fd_joints, currentPos, currentVel, currentJointTau);
 	HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &txHeader_fd_joints, txMsg_fd_joints);
 
-	pack_reply48_sens(txMsg_fd_sens, force1, force2);
-	HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &txHeader_fd_sens, txMsg_fd_sens);
+//	pack_reply48_sens(txMsg_fd_sens, force1, force2);
+//	HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &txHeader_fd_sens, txMsg_fd_sens);
 }
 
 
