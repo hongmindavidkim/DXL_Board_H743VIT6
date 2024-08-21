@@ -40,13 +40,13 @@ XM430_bus dxl_bus_1(&huart1, RTS1_GPIO_Port, RTS1_Pin); // left MCP, PIP, DIP
 XM430_bus dxl_bus_2(&huart2, RTS2_GPIO_Port, RTS2_Pin); // right MCP, PIP, DIP
 XM430_bus dxl_bus_3(&huart7, RTS7_GPIO_Port, RTS7_Pin); // left MCR, right MCR
 
-uint8_t dxl_IDs[] = {1, 2, 3, 4, 5, 6, 7, 8};
+uint8_t dxl_IDs[] = {1, 2, 3, 4, 5, 6, 7, 8 , 9};
 uint8_t dxl_ID1[] =  {1, 2, 3};
 uint8_t dxl_ID2[] = {5, 6, 7};
-uint8_t dxl_ID3[] = {4, 8};
+uint8_t dxl_ID3[] = {4, 8, 9};
 uint8_t idLength1 = 3;
 uint8_t idLength2 = 3;
-uint8_t idLength3 = 2;
+uint8_t idLength3 = 3;
 volatile uint8_t tx_flag_1;
 volatile uint8_t tx_flag_2;
 volatile uint8_t tx_flag_3;
@@ -55,9 +55,9 @@ volatile uint8_t rx_flag_2;
 volatile uint8_t rx_flag_3;
 
 // joint-space states
-float joint_pos[8];
-float joint_vel[8];
-float joint_tau[8];
+float joint_pos[9];
+float joint_vel[9];
+float joint_tau[9];
 
 // joint-space commands
 float joint_tau_des[8]; 
@@ -68,11 +68,11 @@ float joint_kp[8]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
 float joint_kd[8]      = {0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f};
 
 // motor-space states
-int32_t motor_pos[8];
-int32_t motor_vel[8];
-int16_t motor_cur[8];
-float motor_cur_A[8];
-float motor_tau[8];
+int32_t motor_pos[9];
+int32_t motor_vel[9];
+int16_t motor_cur[9];
+float motor_cur_A[9];
+float motor_tau[9];
 
 // motor-space commands
 float motor_tau_des[8];
@@ -426,6 +426,7 @@ int dxl_main(void)
 	while (1)
 	{
 		// just blink the LED in sensor debug mode
+		printf("Running!\r\n");
 		if (SENSOR_DEBUG) {
 			if(loop_count % 1000000 == 0){
 //				printf("Loop time: %u \r\n",eval_time);

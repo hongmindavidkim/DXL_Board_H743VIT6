@@ -92,6 +92,7 @@ void MotorPos2JointPos(int32_t* motor_pos_in, float* joint_pos_out){
     joint_pos_out[4] = (r12/r1)*joint_pos_out[7] + (rm/r2)*mcp;
     joint_pos_out[5] = (rm/r3)*pip - (r13/r1)*joint_pos_out[7] - (r23/r2)*joint_pos_out[4];
     joint_pos_out[6] = (r14/r1)*joint_pos_out[7] - (r24/r2)*joint_pos_out[4] - (r34/r3)*joint_pos_out[5] + (rm/r4)*dip;
+    joint_pos_out[8] = pulse2rad(motor_pos_in[8]);
 }
 
 // transform velocities from joint-space to motor-space

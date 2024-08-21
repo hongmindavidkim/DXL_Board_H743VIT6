@@ -55,7 +55,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		// re-enable motor
 		HAL_Delay(100);
 		dxl_bus_1.TurnOnLED(dxl_ID1[i], 0x01);
-		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x01); // to be able to move
+//		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x01); // to be able to move
 		HAL_Delay(100);
 	}
 	for (int i=0; i<idLength2; i++) {
@@ -81,7 +81,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		// re-enable motor
 		HAL_Delay(100);
 		dxl_bus_2.TurnOnLED(dxl_ID2[i], 0x01);
-		dxl_bus_2.SetTorqueEn(dxl_ID2[i],0x01); // to be able to move
+//		dxl_bus_2.SetTorqueEn(dxl_ID2[i],0x01); // to be able to move
 		HAL_Delay(100);
 	}
 	for (int i=0; i<idLength3; i++) {
@@ -107,10 +107,8 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		// re-enable motor
 		HAL_Delay(100);
 		dxl_bus_3.TurnOnLED(dxl_ID3[i], 0x01);
-		dxl_bus_3.SetTorqueEn(dxl_ID3[i],0x01); // to be able to move
 		HAL_Delay(100);
 	}
-
 	// set smooth DXL profile
 	for (int i=0; i<idLength1; i++) {
 		dxl_bus_1.SetVelocityProfile(dxl_ID1[i], 414); // 414(94.81RPM) @ 14.8V, 330(75.57RPM) @ 12V
@@ -141,12 +139,12 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 	int32_t pos3[2];
 	pos3[0] = home_motor_pos[3];
 	pos3[1] = home_motor_pos[7];
-	if (!torque_disable){
-		dxl_bus_1.SetMultGoalPositions(dxl_ID1, idLength1, (uint32_t*)pos1);
-		dxl_bus_2.SetMultGoalPositions(dxl_ID2, idLength2, (uint32_t*)pos2);
-		dxl_bus_3.SetMultGoalPositions(dxl_ID3, idLength3, (uint32_t*)pos3);
-		HAL_Delay(100);
-	}
+//	if (!torque_disable){
+//		dxl_bus_1.SetMultGoalPositions(dxl_ID1, idLength1, (uint32_t*)pos1);
+//		dxl_bus_2.SetMultGoalPositions(dxl_ID2, idLength2, (uint32_t*)pos2);
+//		dxl_bus_3.SetMultGoalPositions(dxl_ID3, idLength3, (uint32_t*)pos3);
+//		HAL_Delay(100);
+//	}
 
 	// re-set to fast DXL profile, if not in current control mode set current limit
 	for (int i=0; i<idLength1; i++) {
