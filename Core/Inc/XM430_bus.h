@@ -243,7 +243,7 @@ public:
 	/***** Variables *****/
 	uint8_t iPacket[100];    //Instruction Packet
 	uint8_t iPacketLength;  //Instruction Packet Length
-	uint8_t rPacket[100];    //Return Packet
+	uint8_t rPacket[200];    //Return Packet
 	uint8_t rPacketLength;  //Return Packet Length
 	UART_HandleTypeDef* sbus;
 	GPIO_TypeDef* rtswitch_port;

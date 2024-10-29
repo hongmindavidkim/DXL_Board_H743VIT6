@@ -37,22 +37,16 @@ uint8_t rxBuf_joints[48];
 
 // Initialize dynamixel stuff
 XM430_bus dxl_bus_1(&huart1, RTS1_GPIO_Port, RTS1_Pin); // left MCP, PIP, DIP
-XM430_bus dxl_bus_2(&huart2, RTS2_GPIO_Port, RTS2_Pin); // right MCP, PIP, DIP
-XM430_bus dxl_bus_3(&huart7, RTS7_GPIO_Port, RTS7_Pin); // left MCR, right MCR
 
-uint8_t dxl_IDs[] = {1, 2, 3, 4, 5, 6, 7, 8 , 9};
-uint8_t dxl_ID1[] =  {1, 2, 3};
-uint8_t dxl_ID2[] = {5, 6, 7};
-uint8_t dxl_ID3[] = {4, 8, 9};
-uint8_t idLength1 = 3;
-uint8_t idLength2 = 3;
-uint8_t idLength3 = 3;
+uint8_t dxl_IDs[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+uint8_t dxl_ID1[] =  {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+uint8_t idLength1 = 9;
+
 volatile uint8_t tx_flag_1;
-volatile uint8_t tx_flag_2;
-volatile uint8_t tx_flag_3;
+
 volatile uint8_t rx_flag_1;
-volatile uint8_t rx_flag_2;
-volatile uint8_t rx_flag_3;
+
 
 // joint-space states
 float joint_pos[9];
@@ -91,26 +85,18 @@ void GetBulkData_DMA()
 	uint8_t start_addr = PRESENT_CURRENT;
 	dxl_bus_1.sRead(data_len, start_addr, dxl_ID1, idLength1);
 	dxl_bus_1.rPacketLength = 8 + idLength1*(4+data_len);
-	dxl_bus_2.sRead(data_len, start_addr, dxl_ID2, idLength2);
-	dxl_bus_2.rPacketLength = 8 + idLength2*(4+data_len);
-	dxl_bus_3.sRead(data_len, start_addr, dxl_ID3, idLength3);
-	dxl_bus_3.rPacketLength = 8 + idLength3*(4+data_len);
+
 
 	// DMA transmissions
 	tx_flag_1 = 0;
 	rx_flag_1 = 0;
-	tx_flag_2 = 0;
-	rx_flag_2 = 0;
-	tx_flag_3 = 0;
-	rx_flag_3 = 0;
+
 	dxl_bus_1.sendIPacket_DMA();
-	dxl_bus_2.sendIPacket_DMA();
-	dxl_bus_3.sendIPacket_DMA();
-	while((!tx_flag_1)||(!tx_flag_2)||(!tx_flag_3)){;}
+
+	while((!tx_flag_1)){;}
 	dxl_bus_1.getRPacket_DMA();
-	dxl_bus_2.getRPacket_DMA();
-	dxl_bus_3.getRPacket_DMA();
-	while((!rx_flag_1)||(!rx_flag_2)||(!rx_flag_3)){;}
+
+	while((!rx_flag_1)){;}
 
 	// for loop to extract ret_vals from rPackets
 	int i = 10;
@@ -128,36 +114,6 @@ void GetBulkData_DMA()
 		motor_pos[h] = (int32_t) ((uint32_t)ret_vals1[6] | (((uint32_t)ret_vals1[7]<<8)&0x0000FF00) | (((uint32_t)ret_vals1[8]<<16)&0x00FF0000) | (((uint32_t)ret_vals1[9]<<24)&0xFF000000));
 		i+=4; // increment for next ID in rPacket
 	}
-	i = 10; // reset index
-	uint8_t ret_vals2[data_len];
-	for(int j=0; j<idLength2; j++){ // for each ID
-		// pull data out from rPacket
-		for (int k=0; k<data_len; k++){
-			ret_vals2[k] = dxl_bus_2.rPacket[i];
-			i++;
-		}
-		// pack dxl variables
-		int h = dxl_ID2[j]-1;
-		motor_cur[h] = (int16_t) ((uint16_t)ret_vals2[0] | (((uint16_t)ret_vals2[1]<<8)&0xFF00));
-		motor_vel[h] = (int32_t) ((uint32_t)ret_vals2[2] | (((uint32_t)ret_vals2[3]<<8)&0x0000FF00) | (((uint32_t)ret_vals2[4]<<16)&0x00FF0000) | (((uint32_t)ret_vals2[5]<<24)&0xFF000000));
-		motor_pos[h] = (int32_t) ((uint32_t)ret_vals2[6] | (((uint32_t)ret_vals2[7]<<8)&0x0000FF00) | (((uint32_t)ret_vals2[8]<<16)&0x00FF0000) | (((uint32_t)ret_vals2[9]<<24)&0xFF000000));
-		i+=4; // increment for next ID in rPacket
-	}
-	i = 10; // reset index
-	uint8_t ret_vals3[data_len];
-	for(int j=0; j<idLength3; j++){ // for each ID
-		// pull data out from rPacket
-		for (int k=0; k<data_len; k++){
-			ret_vals3[k] = dxl_bus_3.rPacket[i];
-			i++;
-		}
-		// pack dxl variables
-		int h = dxl_ID3[j]-1;
-		motor_cur[h] = (int16_t) ((uint16_t)ret_vals3[0] | (((uint16_t)ret_vals3[1]<<8)&0xFF00));
-		motor_vel[h] = (int32_t) ((uint32_t)ret_vals3[2] | (((uint32_t)ret_vals3[3]<<8)&0x0000FF00) | (((uint32_t)ret_vals3[4]<<16)&0x00FF0000) | (((uint32_t)ret_vals3[5]<<24)&0xFF000000));
-		motor_pos[h] = (int32_t) ((uint32_t)ret_vals3[6] | (((uint32_t)ret_vals3[7]<<8)&0x0000FF00) | (((uint32_t)ret_vals3[8]<<16)&0x00FF0000) | (((uint32_t)ret_vals3[9]<<24)&0xFF000000));
-		i+=4; // increment for next ID in rPacket
-	}
 
 }
 
@@ -166,10 +122,6 @@ void SetFullControlCommands_DMA()
 {
     uint8_t num_params1 = idLength1*15; // 1 for ID + 14 for data length
     uint8_t parameter1[num_params1];
-    uint8_t num_params2 = idLength2*15; // 1 for ID + 14 for data length
-	uint8_t parameter2[num_params2];
-	uint8_t num_params3 = idLength3*15; // 1 for ID + 14 for data length
-	uint8_t parameter3[num_params3];
 
     for (int i=0; i<idLength1; i++){
     	int j = i*15;
@@ -195,67 +147,15 @@ void SetFullControlCommands_DMA()
 		parameter1[j+13] = SHIFT_TO_LSB(cur);
 		parameter1[j+14] = SHIFT_TO_MSB(cur);
 	}
-    for (int i=0; i<idLength2; i++){
-    	int j = i*15;
-		int k = dxl_ID2[i]-1;
-		uint32_t pos = motor_pos_des[k];
-		uint32_t vel = motor_vel_des[k];
-		uint32_t cur = motor_cur_des[k];
-		uint32_t kp = motor_kp[k];
-		uint32_t kd = motor_kd[k];
-		parameter2[j]    = dxl_ID2[i];
-		parameter2[j+1]  = SHIFT_TO_LSB(kp);
-		parameter2[j+2]  = SHIFT_TO_MSB(kp);
-		parameter2[j+3]  = SHIFT_TO_LSB(kd);
-		parameter2[j+4]  = SHIFT_TO_MSB(kd);
-		parameter2[j+5]  = (uint8_t) (pos&0x00000FF);
-		parameter2[j+6]  = (uint8_t) ((pos&0x0000FF00)>>8);
-		parameter2[j+7]  = (uint8_t) ((pos&0x00FF0000)>>16);
-		parameter2[j+8]  = (uint8_t) (pos>>24);
-		parameter2[j+9]  = (uint8_t) (vel&0x00000FF);
-		parameter2[j+10] = (uint8_t) ((vel&0x0000FF00)>>8);
-		parameter2[j+11] = (uint8_t) ((vel&0x00FF0000)>>16);
-		parameter2[j+12] = (uint8_t) (vel>>24);
-		parameter2[j+13] = SHIFT_TO_LSB(cur);
-		parameter2[j+14] = SHIFT_TO_MSB(cur);
-	}
-    for (int i=0; i<idLength3; i++){
-		int j = i*15;
-		int k = dxl_ID3[i]-1;
-		uint32_t pos = motor_pos_des[k];
-		uint32_t vel = motor_vel_des[k];
-		uint32_t cur = motor_cur_des[k];
-		uint32_t kp = motor_kp[k];
-		uint32_t kd = motor_kd[k];
-		parameter3[j]    = dxl_ID3[i];
-		parameter3[j+1]  = SHIFT_TO_LSB(kp);
-		parameter3[j+2]  = SHIFT_TO_MSB(kp);
-		parameter3[j+3]  = SHIFT_TO_LSB(kd);
-		parameter3[j+4]  = SHIFT_TO_MSB(kd);
-		parameter3[j+5]  = (uint8_t) (pos&0x00000FF);
-		parameter3[j+6]  = (uint8_t) ((pos&0x0000FF00)>>8);
-		parameter3[j+7]  = (uint8_t) ((pos&0x00FF0000)>>16);
-		parameter3[j+8]  = (uint8_t) (pos>>24);
-		parameter3[j+9]  = (uint8_t) (vel&0x00000FF);
-		parameter3[j+10] = (uint8_t) ((vel&0x0000FF00)>>8);
-		parameter3[j+11] = (uint8_t) ((vel&0x00FF0000)>>16);
-		parameter3[j+12] = (uint8_t) (vel>>24);
-		parameter3[j+13] = SHIFT_TO_LSB(cur);
-		parameter3[j+14] = SHIFT_TO_MSB(cur);
-	}
+
 
     dxl_bus_1.sWrite(14, CTRL_WRITE_START, parameter1, num_params1);
-    dxl_bus_2.sWrite(14, CTRL_WRITE_START, parameter2, num_params2);
-    dxl_bus_3.sWrite(14, CTRL_WRITE_START, parameter3, num_params3);
 
     tx_flag_1 = 0;
-	tx_flag_2 = 0;
-	tx_flag_3 = 0;
 
     dxl_bus_1.sendIPacket_DMA();
-	dxl_bus_2.sendIPacket_DMA();
-	dxl_bus_3.sendIPacket_DMA();
-	while((!tx_flag_1)||(!tx_flag_2)||(!tx_flag_3)){;}
+
+	while((!tx_flag_1)){;}
 }
 
 // run motor control laws
@@ -508,12 +408,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	if(huart->Instance==USART1) {
 //		printf("Rx 1 done!\n\r");
 		rx_flag_1 = 1;
-	} else if(huart->Instance==USART2){
-//		printf("Rx 2 done!\n\r");
-		rx_flag_2 = 1;
-	} else if(huart->Instance==UART7){
-//		printf("Rx 3 done!\n\r");
-		rx_flag_3 = 1;
 	}
 }
 
@@ -524,14 +418,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 		HAL_GPIO_WritePin(RTS1_GPIO_Port, RTS1_Pin, GPIO_PIN_RESET);
 //		printf("Tx 1 done!\n\r");
 		tx_flag_1 = 1;
-	} else if(huart->Instance==USART2){
-		HAL_GPIO_WritePin(RTS2_GPIO_Port, RTS2_Pin, GPIO_PIN_RESET);
-//		printf("Tx 2 done!\n\r");
-		tx_flag_2 = 1;
-	} else if(huart->Instance==UART7){
-		HAL_GPIO_WritePin(RTS7_GPIO_Port, RTS7_Pin, GPIO_PIN_RESET);
-//		printf("Tx 3 done!\n\r");
-		tx_flag_3 = 1;
 	}
 }
 

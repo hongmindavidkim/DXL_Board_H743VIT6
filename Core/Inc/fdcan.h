@@ -34,8 +34,6 @@ extern "C" {
 
 extern FDCAN_HandleTypeDef hfdcan1;
 
-extern FDCAN_HandleTypeDef hfdcan2;
-
 /* USER CODE BEGIN Private defines */
 //MAIN BUS CAN
 #define CAN_TX_DXL9            0
@@ -115,7 +113,6 @@ extern uint8_t sense_rx_buf[8];
 /* USER CODE END Private defines */
 
 void MX_FDCAN1_Init(void);
-void MX_FDCAN2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
