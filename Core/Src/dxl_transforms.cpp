@@ -50,23 +50,27 @@ void JointPos2MotorPos(float* joint_pos_in, int32_t* motor_pos_out){
     // motor_pos_out: same as joint_pos_in
 
     // Left finger
-    float mcr = joint_pos_in[3];
-    float mcp = joint_pos_in[0];
-    float pip = joint_pos_in[1];
-    float dip = joint_pos_in[2];
-    motor_pos_out[3] = (int32_t)round(rad2pulse( (r1/rmcr)* mcr));
-    motor_pos_out[0] = (int32_t)round(rad2pulse( (r2/rm)*( -(r12/r1)*mcr + mcp ) ));
-    motor_pos_out[1] = (int32_t)round(rad2pulse( (r3/rm)*( (r13/r1)*mcr + (r23/r2)*mcp + pip ) ));
-    motor_pos_out[2] = (int32_t)round(rad2pulse( (r4/rm)*( -(r14/r1)*mcr + (r24/r2)*mcp + (r34/r3)*pip + dip ) ));
-    // Right finger
-    mcr = joint_pos_in[7];
-    mcp = joint_pos_in[4];
-    pip = joint_pos_in[5];
-    dip = joint_pos_in[6];
-    motor_pos_out[7] = (int32_t)round(rad2pulse( (r1/rmcr)* mcr));
-    motor_pos_out[4] = (int32_t)round(rad2pulse( (r2/rm)*( -(r12/r1)*mcr + mcp ) ));
-    motor_pos_out[5] = (int32_t)round(rad2pulse( (r3/rm)*( (r13/r1)*mcr + (r23/r2)*mcp + pip ) ));
-    motor_pos_out[6] = (int32_t)round(rad2pulse( (r4/rm)*( -(r14/r1)*mcr + (r24/r2)*mcp + (r34/r3)*pip + dip ) ));
+//    float mcr = joint_pos_in[3];
+//    float mcp = joint_pos_in[0];
+//    float pip = joint_pos_in[1];
+//    float dip = joint_pos_in[2];
+//    motor_pos_out[3] = (int32_t)round(rad2pulse( (r1/rmcr)* mcr));
+//    motor_pos_out[0] = (int32_t)round(rad2pulse( (r2/rm)*( -(r12/r1)*mcr + mcp ) ));
+//    motor_pos_out[1] = (int32_t)round(rad2pulse( (r3/rm)*( (r13/r1)*mcr + (r23/r2)*mcp + pip ) ));
+//    motor_pos_out[2] = (int32_t)round(rad2pulse( (r4/rm)*( -(r14/r1)*mcr + (r24/r2)*mcp + (r34/r3)*pip + dip ) ));
+//    // Right finger
+//    mcr = joint_pos_in[7];
+//    mcp = joint_pos_in[4];
+//    pip = joint_pos_in[5];
+//    dip = joint_pos_in[6];
+//    motor_pos_out[7] = (int32_t)round(rad2pulse( (r1/rmcr)* mcr));
+//    motor_pos_out[4] = (int32_t)round(rad2pulse( (r2/rm)*( -(r12/r1)*mcr + mcp ) ));
+//    motor_pos_out[5] = (int32_t)round(rad2pulse( (r3/rm)*( (r13/r1)*mcr + (r23/r2)*mcp + pip ) ));
+//    motor_pos_out[6] = (int32_t)round(rad2pulse( (r4/rm)*( -(r14/r1)*mcr + (r24/r2)*mcp + (r34/r3)*pip + dip ) ));
+
+    for(int i=0;i<9;i++){
+    	motor_pos_out[i] = (int32_t)round(rad2pulse(joint_pos_in[i]));
+    }
 }
 
 // transform positions from motor-space to joint-space
@@ -75,24 +79,29 @@ void MotorPos2JointPos(int32_t* motor_pos_in, float* joint_pos_out){
     // joint_pos_out: same as motor_pos_in
 
     // Left finger
-    float mcr = pulse2rad(motor_pos_in[3]);
-    float mcp = pulse2rad(motor_pos_in[0]);
-    float pip = pulse2rad(motor_pos_in[1]);
-    float dip = pulse2rad(motor_pos_in[2]);
-    joint_pos_out[3] = (rmcr/r1)*mcr;
-    joint_pos_out[0] = (r12/r1)*joint_pos_out[3] + (rm/r2)*mcp;
-    joint_pos_out[1] = (rm/r3)*pip - (r13/r1)*joint_pos_out[3] - (r23/r2)*joint_pos_out[0];
-    joint_pos_out[2] = (r14/r1)*joint_pos_out[3] - (r24/r2)*joint_pos_out[0] - (r34/r3)*joint_pos_out[1] + (rm/r4)*dip;
-    // Right finger
-    mcr = pulse2rad(motor_pos_in[7]);
-    mcp = pulse2rad(motor_pos_in[4]);
-    pip = pulse2rad(motor_pos_in[5]);
-    dip = pulse2rad(motor_pos_in[6]);
-    joint_pos_out[7] = (rmcr/r1)*mcr;
-    joint_pos_out[4] = (r12/r1)*joint_pos_out[7] + (rm/r2)*mcp;
-    joint_pos_out[5] = (rm/r3)*pip - (r13/r1)*joint_pos_out[7] - (r23/r2)*joint_pos_out[4];
-    joint_pos_out[6] = (r14/r1)*joint_pos_out[7] - (r24/r2)*joint_pos_out[4] - (r34/r3)*joint_pos_out[5] + (rm/r4)*dip;
-    joint_pos_out[8] = pulse2rad(motor_pos_in[8]);
+//    float mcr = pulse2rad(motor_pos_in[3]);
+//    float mcp = pulse2rad(motor_pos_in[0]);
+//    float pip = pulse2rad(motor_pos_in[1]);
+//    float dip = pulse2rad(motor_pos_in[2]);
+//    joint_pos_out[3] = (rmcr/r1)*mcr;
+//    joint_pos_out[0] = (r12/r1)*joint_pos_out[3] + (rm/r2)*mcp;
+//    joint_pos_out[1] = (rm/r3)*pip - (r13/r1)*joint_pos_out[3] - (r23/r2)*joint_pos_out[0];
+//    joint_pos_out[2] = (r14/r1)*joint_pos_out[3] - (r24/r2)*joint_pos_out[0] - (r34/r3)*joint_pos_out[1] + (rm/r4)*dip;
+//    // Right finger
+//    mcr = pulse2rad(motor_pos_in[7]);
+//    mcp = pulse2rad(motor_pos_in[4]);
+//    pip = pulse2rad(motor_pos_in[5]);
+//    dip = pulse2rad(motor_pos_in[6]);
+//    joint_pos_out[7] = (rmcr/r1)*mcr;
+//    joint_pos_out[4] = (r12/r1)*joint_pos_out[7] + (rm/r2)*mcp;
+//    joint_pos_out[5] = (rm/r3)*pip - (r13/r1)*joint_pos_out[7] - (r23/r2)*joint_pos_out[4];
+//    joint_pos_out[6] = (r14/r1)*joint_pos_out[7] - (r24/r2)*joint_pos_out[4] - (r34/r3)*joint_pos_out[5] + (rm/r4)*dip;
+//    joint_pos_out[8] = pulse2rad(motor_pos_in[8]);
+
+    for(int i=0; i<9; i++){
+    	joint_pos_out[i] = pulse2rad(motor_pos_in[i]);
+    }
+
 }
 
 // transform velocities from joint-space to motor-space
@@ -109,23 +118,27 @@ void MotorVel2JointVel(int32_t* motor_vel_in, float* joint_vel_out){
     // joint_vel_out: same as motor_pos_in
 
     // Left finger
-    float mcr = rpm2rads(motor_vel_in[3]);
-    float mcp = rpm2rads(motor_vel_in[0]);
-    float pip = rpm2rads(motor_vel_in[1]);
-    float dip = rpm2rads(motor_vel_in[2]);
-    joint_vel_out[3] = (rmcr/r1)*mcr;
-    joint_vel_out[0] = (r12/r1)*joint_vel_out[3] + (rm/r2)*mcp;
-    joint_vel_out[1] = (rm/r3)*pip - (r13/r1)*joint_vel_out[3] - (r23/r2)*joint_vel_out[0];
-    joint_vel_out[2] = (r14/r1)*joint_vel_out[3] - (r24/r2)*joint_vel_out[0] - (r34/r3)*joint_vel_out[1] + (rm/r4)*dip;
-    // Right finger
-    mcr = rpm2rads(motor_vel_in[7]);
-    mcp = rpm2rads(motor_vel_in[4]);
-    pip = rpm2rads(motor_vel_in[5]);
-    dip = rpm2rads(motor_vel_in[6]);
-    joint_vel_out[7] = (rmcr/r1)*mcr;
-    joint_vel_out[4] = (r12/r1)*joint_vel_out[7] + (rm/r2)*mcp;
-    joint_vel_out[5] = (rm/r3)*pip - (r13/r1)*joint_vel_out[7] - (r23/r2)*joint_vel_out[4];
-    joint_vel_out[6] = (r14/r1)*joint_vel_out[7] - (r24/r2)*joint_vel_out[4] - (r34/r3)*joint_vel_out[5] + (rm/r4)*dip;
+//    float mcr = rpm2rads(motor_vel_in[3]);
+//    float mcp = rpm2rads(motor_vel_in[0]);
+//    float pip = rpm2rads(motor_vel_in[1]);
+//    float dip = rpm2rads(motor_vel_in[2]);
+//    joint_vel_out[3] = (rmcr/r1)*mcr;
+//    joint_vel_out[0] = (r12/r1)*joint_vel_out[3] + (rm/r2)*mcp;
+//    joint_vel_out[1] = (rm/r3)*pip - (r13/r1)*joint_vel_out[3] - (r23/r2)*joint_vel_out[0];
+//    joint_vel_out[2] = (r14/r1)*joint_vel_out[3] - (r24/r2)*joint_vel_out[0] - (r34/r3)*joint_vel_out[1] + (rm/r4)*dip;
+//    // Right finger
+//    mcr = rpm2rads(motor_vel_in[7]);
+//    mcp = rpm2rads(motor_vel_in[4]);
+//    pip = rpm2rads(motor_vel_in[5]);
+//    dip = rpm2rads(motor_vel_in[6]);
+//    joint_vel_out[7] = (rmcr/r1)*mcr;
+//    joint_vel_out[4] = (r12/r1)*joint_vel_out[7] + (rm/r2)*mcp;
+//    joint_vel_out[5] = (rm/r3)*pip - (r13/r1)*joint_vel_out[7] - (r23/r2)*joint_vel_out[4];
+//    joint_vel_out[6] = (r14/r1)*joint_vel_out[7] - (r24/r2)*joint_vel_out[4] - (r34/r3)*joint_vel_out[5] + (rm/r4)*dip;
+//
+    for(int k=0; k<9; k++){
+    	joint_vel_out[k] = rpm2rads(motor_vel_in[k]);
+    }
 }
 
 // transform torques from joint-space to motor-space

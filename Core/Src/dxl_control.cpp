@@ -326,7 +326,7 @@ int dxl_main(void)
 	while (1)
 	{
 		// just blink the LED in sensor debug mode
-		printf("Running!\r\n");
+//		printf("Running!\r\n");
 		if (SENSOR_DEBUG) {
 			if(loop_count % 1000000 == 0){
 //				printf("Loop time: %u \r\n",eval_time);
