@@ -38,10 +38,10 @@ uint8_t rxBuf_joints[48];
 // Initialize dynamixel stuff
 XM430_bus dxl_bus_1(&huart1, RTS1_GPIO_Port, RTS1_Pin); // left MCP, PIP, DIP
 
-uint8_t dxl_IDs[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-uint8_t dxl_ID1[] =  {1, 2, 3, 4, 5, 6, 7, 8, 9};
+uint8_t dxl_IDs[] = {1, 2, 3, 4, 5, 6, 7};
+uint8_t dxl_ID1[] =  {1, 2, 3, 4, 5, 6, 7};
 
-uint8_t idLength1 = 9;
+uint8_t idLength1 = 7;
 
 volatile uint8_t tx_flag_1;
 
@@ -49,33 +49,33 @@ volatile uint8_t rx_flag_1;
 
 
 // joint-space states
-float joint_pos[9];
-float joint_vel[9];
-float joint_tau[9];
+float joint_pos[7];
+float joint_vel[7];
+float joint_tau[7];
 
 // joint-space commands
-float joint_tau_des[8]; 
-float joint_pos_des[8] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-float joint_vel_des[8] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-float joint_tau_ff[8]  = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-float joint_kp[8]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
-float joint_kd[8]      = {0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f};
+float joint_tau_des[7];
+float joint_pos_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float joint_vel_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float joint_tau_ff[7]  = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float joint_kp[7]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
+float joint_kd[7]      = {0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f};
 
 // motor-space states
-int32_t motor_pos[9];
-int32_t motor_vel[9];
-int16_t motor_cur[9];
-float motor_cur_A[9];
-float motor_tau[9];
+int32_t motor_pos[7];
+int32_t motor_vel[7];
+int16_t motor_cur[7];
+float motor_cur_A[7];
+float motor_tau[7];
 
 // motor-space commands
-float motor_tau_des[8];
-int32_t motor_pos_des[8];
-int32_t motor_vel_des[8];
-int16_t motor_cur_des[8];
-float motor_cur_des_A[8];
-uint32_t motor_kp[8];
-uint32_t motor_kd[8];
+float motor_tau_des[7];
+int32_t motor_pos_des[7];
+int32_t motor_vel_des[7];
+int16_t motor_cur_des[7];
+float motor_cur_des_A[7];
+uint32_t motor_kp[7];
+uint32_t motor_kd[7];
 
 // get all of the motor data
 void GetBulkData_DMA()
@@ -216,12 +216,16 @@ else{
 			// transform desired joint positions to desired actuator positions
 			JointPos2MotorPos(joint_pos_des, motor_pos_des);
 			// set the rest of the commands to send to motors
-			for (int i=0; i<8; i++){
+			for (int i=0; i<6; i++){
+//				motor_pos_des[i] = 2048;
 				motor_vel_des[i] = 0;
-				motor_cur_des[i] = 0;
-				motor_kp[i] = 800;
+//				motor_cur_des[i] = 0;
+				motor_kp[i] = 1000;
 				motor_kd[i] = 0;
 			}
+				motor_kp[6] = 1000;
+				motor_kd[6] = 300;
+//				motor_cur_des[6] = 800;
 		}
 		eval_time[1] = __HAL_TIM_GET_COUNTER(&htim1); //Joint space Impedance Controller Calculation
 		__HAL_TIM_SET_COUNTER(&htim1,0);
@@ -239,6 +243,7 @@ void sendCAN(){
 //	__HAL_TIM_SET_COUNTER(&htim1,0);
 	pack_reply48_joints(txMsg_joints, joint_pos, joint_vel, joint_tau);
 	HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &txHeader_joints, txMsg_joints);
+//	printf("Sending CAN Messages!\r\n");
 //	eval_time[3] = __HAL_TIM_GET_COUNTER(&htim1);
 
 }
@@ -362,7 +367,7 @@ int dxl_main(void)
 			}
 
 			// reset CAN commands
-			for (int i=0; i<8; i++){
+			for (int i=0; i<7; i++){
 				joint_pos_des[i] = 0.0f;
 				joint_vel_des[i] = 0.0f;
 				joint_tau_ff[i] = 0.0f;
@@ -426,41 +431,19 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *canHandle, uint32_t RxFifo0I
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET){
 		HAL_FDCAN_GetRxMessage(canHandle, FDCAN_RX_FIFO0, &rxMsg_joints, rxBuf_joints);
 		uint32_t id = rxMsg_joints.Identifier;
-		// Left finger
-		if(id==3){ 
-			int p_int[4], v_int[4], kp_int[4], kd_int[4], t_int[4];
-			for(int i=0;i<4;i++){
-				p_int[i] = (rxBuf_joints[i*8+0]<<8)|rxBuf_joints[i*8+1];
-				v_int[i] = (rxBuf_joints[i*8+2]<<4)|(rxBuf_joints[i*8+3]>>4);
-				kp_int[i] = ((rxBuf_joints[i*8+3]&0xF)<<8)|rxBuf_joints[i*8+4];
-				kd_int[i] = (rxBuf_joints[i*8+5]<<4)|(rxBuf_joints[i*8+6]>>4);
-				t_int[i] = ((rxBuf_joints[i*8+6]&0xF)<<8)|rxBuf_joints[i*8+7];
-			}
-			for(int j=0;j<4;j++){
-				joint_pos_des[j] = uint_to_float(p_int[j], P_MIN, P_MAX, 16);
-				joint_vel_des[j] = uint_to_float(v_int[j], V_MIN, V_MAX, 12);
-				joint_kp[j] = uint_to_float(kp_int[j], KP_MIN, KP_MAX, 12)/KP_SCALE;
-				joint_kd[j] = uint_to_float(kd_int[j], KD_MIN, KD_MAX, 12)/KD_SCALE;
-				joint_tau_ff[j] = uint_to_float(t_int[j], T_MIN, T_MAX, 12)/T_SCALE;
-			}
-		}
-		// Right finger
-		else if(id==4){
-			int p_int[4], v_int[4], kp_int[4], kd_int[4], t_int[4];
-			for(int i=0;i<4;i++){
-				p_int[i] = (rxBuf_joints[i*8+0]<<8)|rxBuf_joints[i*8+1];
-				v_int[i] = (rxBuf_joints[i*8+2]<<4)|(rxBuf_joints[i*8+3]>>4);
-				kp_int[i] = ((rxBuf_joints[i*8+3]&0xF)<<8)|rxBuf_joints[i*8+4];
-				kd_int[i] = (rxBuf_joints[i*8+5]<<4)|(rxBuf_joints[i*8+6]>>4);
-				t_int[i] = ((rxBuf_joints[i*8+6]&0xF)<<8)|rxBuf_joints[i*8+7];
-			}
-			for(int j=0;j<4;j++){
-				joint_pos_des[j+4] = uint_to_float(p_int[j], P_MIN, P_MAX, 16);
-				joint_vel_des[j+4] = uint_to_float(v_int[j], V_MIN, V_MAX, 12);
-				joint_kp[j+4] = uint_to_float(kp_int[j], KP_MIN, KP_MAX, 12)/KP_SCALE;
-				joint_kd[j+4] = uint_to_float(kd_int[j], KD_MIN, KD_MAX, 12)/KD_SCALE;
-				joint_tau_ff[j+4] = uint_to_float(t_int[j], T_MIN, T_MAX, 12)/T_SCALE;
-			}
+
+		//All Axes Aloha
+		if(id == 79) {
+		    int p_int[7], v_int[7];
+		    for(int i = 0; i < 7; i++) {
+		        p_int[i] = (rxBuf_joints[i * 5 + 0] << 8) | rxBuf_joints[i * 5 + 1];
+		        v_int[i] = (rxBuf_joints[i * 5 + 2] << 4) | (rxBuf_joints[i * 5 + 3] >> 4);
+		    }
+		    for(int j = 0; j < 7; j++) {
+		        joint_pos_des[j] = uint_to_float(p_int[j], P_MIN, P_MAX, 16);
+		        joint_vel_des[j] = uint_to_float(v_int[j], V_MIN, V_MAX, 12);
+		    }
+//		    printf("getting cmds!\r\n");
 		}
 		// Mode select message
 		else if(id==80){

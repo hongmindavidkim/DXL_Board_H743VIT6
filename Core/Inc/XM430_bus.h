@@ -241,7 +241,7 @@ public:
 	uint32_t GetSomething32(uint8_t id, uint16_t address);
 
 	/***** Variables *****/
-	uint8_t iPacket[100];    //Instruction Packet
+	uint8_t iPacket[200];    //Instruction Packet
 	uint8_t iPacketLength;  //Instruction Packet Length
 	uint8_t rPacket[200];    //Return Packet
 	uint8_t rPacketLength;  //Return Packet Length

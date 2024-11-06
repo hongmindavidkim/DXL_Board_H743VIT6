@@ -24,7 +24,12 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.TurnOnLED(dxl_ID1[i], 0x00); // turn off LED
 		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
 		dxl_bus_1.SetRetDelTime(dxl_ID1[i],0x02); // 4us delay time
+		if (i==6){
+			dxl_bus_1.SetControlMode(dxl_ID1[i], 0x05);
+		}
+		else{
 		dxl_bus_1.SetControlMode(dxl_ID1[i], DXL_MODE);
+		}
 		// set up indirect addresses for faster writing
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 168,  84); // KP
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 170,  85);
@@ -43,7 +48,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		// re-enable motor
 		HAL_Delay(100);
 		dxl_bus_1.TurnOnLED(dxl_ID1[i], 0x01);
-//		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x01); // to be able to move
+		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x01); // to be able to move
 		HAL_Delay(100);
 	}
 
@@ -53,26 +58,26 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.SetAccelerationProfile(dxl_ID1[i], 100); // 80(17166) rev/min^2
 		HAL_Delay(100);
 	}
-
+//	dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 800);
+//	dxl_bus_1.SetPosPGain(dxl_ID1[6], 800);
+//	dxl_bus_1.SetPosDGain(dxl_ID1[6], 4000);
 	// controlled setup to send fingers to zero joint angles
-	float home_joint_pos[8] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-	int32_t home_motor_pos[8];
+	float home_joint_pos[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+	int32_t home_motor_pos[7];
 	JointPos2MotorPos(home_joint_pos, home_motor_pos);
-	int32_t pos1[3];
-	int32_t pos2[3];
-	for (int i=0; i<3; i++) {
-		pos1[i] = home_motor_pos[i];
-		pos2[i] = home_motor_pos[i+4];
-	}
-	int32_t pos3[2];
-	pos3[0] = home_motor_pos[3];
-	pos3[1] = home_motor_pos[7];
-//	if (!torque_disable){
-//		dxl_bus_1.SetMultGoalPositions(dxl_ID1, idLength1, (uint32_t*)pos1);
-//		dxl_bus_2.SetMultGoalPositions(dxl_ID2, idLength2, (uint32_t*)pos2);
-//		dxl_bus_3.SetMultGoalPositions(dxl_ID3, idLength3, (uint32_t*)pos3);
-//		HAL_Delay(100);
+//	int32_t pos1[3];
+//	int32_t pos2[3];
+//	for (int i=0; i<3; i++) {
+//		pos1[i] = home_motor_pos[i];
+//		pos2[i] = home_motor_pos[i+4];
 //	}
+//	int32_t pos3[2];
+//	pos3[0] = home_motor_pos[3];
+//	pos3[1] = home_motor_pos[7];
+	if (!torque_disable){
+		dxl_bus_1.SetMultGoalPositions(dxl_ID1, idLength1, (uint32_t*)home_motor_pos);
+		HAL_Delay(1000);
+	}
 
 	// re-set to fast DXL profile, if not in current control mode set current limit
 	for (int i=0; i<idLength1; i++) {
@@ -81,6 +86,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.SetPosPGain(dxl_ID1[i], 0);
 		dxl_bus_1.SetPosDGain(dxl_ID1[i], 0);
 		if(DXL_MODE!=0x00){ dxl_bus_1.SetGoalCurrent(dxl_ID1[i], 1193); }
+		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 300);
 		HAL_Delay(100);
 	}
 
