@@ -13,7 +13,10 @@ extern uint8_t DXL_MODE;
 void Dynamixel_Shutdown_Routine(){
 	// disable all of the motors
 	for (int i=0; i<idLength1; i++) {
+		if (i==6){;}
+		else{
 		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
+		}
 		HAL_Delay(10);
 	}
 }
@@ -24,7 +27,12 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.TurnOnLED(dxl_ID1[i], 0x00); // turn off LED
 		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
 		dxl_bus_1.SetRetDelTime(dxl_ID1[i],0x02); // 4us delay time
+		if (i==6){
+		dxl_bus_1.SetControlMode(dxl_ID1[i], 0x05);
+		}
+		else {
 		dxl_bus_1.SetControlMode(dxl_ID1[i], DXL_MODE);
+		}
 		// set up indirect addresses for faster writing
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 168,  84); // KP
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 170,  85);

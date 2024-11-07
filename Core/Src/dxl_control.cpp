@@ -14,7 +14,7 @@
 
 // defines
 #define VERSION_NUMBER 	1.21f
-#define MOTOR_KT 		3.7f/2.7f 	// TODO: replace this!
+#define MOTOR_KT 		4.8f/2.7f 	// TODO: replace this!
 #define MOTOR_CUR_LIM 	2.7f 		// TODO: replace this!
 
 #define cur_count2amp(x) (x*(2.69f/1000.0f))
@@ -180,7 +180,7 @@ else{
 	MotorVel2JointVel(motor_vel, joint_vel);
 	
 	// transform motor currents to joint torques
-	for(int i=0; i<8; i++){
+	for(int i=0; i<7; i++){
 		motor_cur_A[i] = cur_count2amp(motor_cur[i]);
 		motor_tau[i] = MOTOR_KT*motor_cur_A[i];
 	}
@@ -190,7 +190,7 @@ else{
 	if (!SENSOR_DEBUG){
 		if (CURR_CONTROL){
 			// PD control plus feedforward torque in joint-space
-			for(int i=0; i<8; i++)  {
+			for(int i=0; i<7; i++)  {
 				 joint_tau_des[i] = joint_kp[i]*(joint_pos_des[i]-joint_pos[i]) 
 				 						+ joint_kd[i]*(joint_vel_des[i]-joint_vel[i]) 
 											+ joint_tau_ff[i];
@@ -198,19 +198,17 @@ else{
 			// convert to desired torques in motor-space
 			JointTau2MotorTau(joint_tau_des, motor_tau_des);
 			// convert to desired motor currents
-			for(int i = 0; i<8; i++){
+			for(int i = 0; i<7; i++){
 				motor_cur_des_A[i] = fmaxf(fminf(motor_tau_des[i]/MOTOR_KT, MOTOR_CUR_LIM), -MOTOR_CUR_LIM);
 				motor_cur_des[i] = cur_amp2count(motor_cur_des_A[i]);
 			}
 			// set the rest of the commands to send to motors
-			for (int i=0; i<8; i++){
+			for (int i=0; i<7; i++){
 				motor_pos_des[i] = 0;
 				motor_vel_des[i] = 0;
 				motor_kp[i] = 0; 
 				motor_kd[i] = 100;
 			}
-			motor_kd[3] = 100; // higher damping gains for abad motors
-			motor_kd[7] = 100;
 		}
 		else { // POSITION CONTROL
 			// transform desired joint positions to desired actuator positions
@@ -227,14 +225,37 @@ else{
 				motor_kd[6] = 300;
 //				motor_cur_des[6] = 800;
 		}
-		eval_time[1] = __HAL_TIM_GET_COUNTER(&htim1); //Joint space Impedance Controller Calculation
-		__HAL_TIM_SET_COUNTER(&htim1,0);
+//		eval_time[1] = __HAL_TIM_GET_COUNTER(&htim1); //Joint space Impedance Controller Calculation
+//		__HAL_TIM_SET_COUNTER(&htim1,0);
 
 		// send commands
 //		__HAL_TIM_SET_COUNTER(&htim1,0);
 		SetFullControlCommands_DMA();
-		eval_time[2] = __HAL_TIM_GET_COUNTER(&htim1); // Send Control
+//		eval_time[2] = __HAL_TIM_GET_COUNTER(&htim1); // Send Control
 	}
+	else{
+		for(int i=6; i<7; i++)  {
+			 joint_tau_des[i] = joint_kp[i]*(joint_pos_des[i]-joint_pos[i])
+			 						+ joint_kd[i]*(joint_vel_des[i]-joint_vel[i])
+										+ joint_tau_ff[i];
+		}
+		// convert to desired torques in motor-space
+		JointTau2MotorTau(joint_tau_des, motor_tau_des);
+		// convert to desired motor currents
+		for(int i = 6; i<7; i++){
+			motor_cur_des_A[i] = fmaxf(fminf(motor_tau_des[i]/MOTOR_KT, MOTOR_CUR_LIM), -MOTOR_CUR_LIM);
+			motor_cur_des[i] = cur_amp2count(motor_cur_des_A[i]);
+		}
+		// set the rest of the commands to send to motors
+		for (int i=6; i<7; i++){
+			motor_pos_des[i] = 0;
+			motor_vel_des[i] = 0;
+			motor_kp[i] = 0;
+			motor_kd[i] = 200;
+		}
+	}
+//	printf("Motor Current Command: %d \n\f", motor_cur_des[6]);
+	SetFullControlCommands_DMA();
 }
 }
 
@@ -434,14 +455,25 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *canHandle, uint32_t RxFifo0I
 
 		//All Axes Aloha
 		if(id == 79) {
-		    int p_int[7], v_int[7];
+		    int p_int[7], v_int[7], t_int[7];
 		    for(int i = 0; i < 7; i++) {
 		        p_int[i] = (rxBuf_joints[i * 5 + 0] << 8) | rxBuf_joints[i * 5 + 1];
 		        v_int[i] = (rxBuf_joints[i * 5 + 2] << 4) | (rxBuf_joints[i * 5 + 3] >> 4);
 		    }
+            for(int i = 0; i < 7; i++) {
+                // Unpack position (16 bits)
+                p_int[i] = (rxBuf_joints[i * 5 + 0] << 8) | rxBuf_joints[i * 5 + 1];
+
+                // Unpack velocity (12 bits)
+                v_int[i] = (rxBuf_joints[i * 5 + 2] << 4) | (rxBuf_joints[i * 5 + 3] >> 4);
+
+                // Unpack torque (12 bits)
+                t_int[i] = ((rxBuf_joints[i * 5 + 3] & 0x0F) << 8) | rxBuf_joints[i * 5 + 4];
+            }
 		    for(int j = 0; j < 7; j++) {
 		        joint_pos_des[j] = uint_to_float(p_int[j], P_MIN, P_MAX, 16);
 		        joint_vel_des[j] = uint_to_float(v_int[j], V_MIN, V_MAX, 12);
+		        joint_tau_ff[j] = uint_to_float(t_int[j], T_MIN, T_MAX, 12);
 		    }
 //		    printf("getting cmds!\r\n");
 		}
