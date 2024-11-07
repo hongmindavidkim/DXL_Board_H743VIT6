@@ -55,7 +55,7 @@ float joint_tau[7];
 
 // joint-space commands
 float joint_tau_des[7];
-float joint_pos_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float joint_pos_des[7] = {-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_vel_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_tau_ff[7]  = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_kp[7]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};

@@ -24,7 +24,9 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.TurnOnLED(dxl_ID1[i], 0x00); // turn off LED
 		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
 		dxl_bus_1.SetRetDelTime(dxl_ID1[i],0x02); // 4us delay time
-		dxl_bus_1.SetControlMode(dxl_ID1[i], DXL_MODE);
+		if (i==6){
+		dxl_bus_1.SetControlMode(dxl_ID1[i],0x05);
+		}else{dxl_bus_1.SetControlMode(dxl_ID1[i], DXL_MODE);}
 		// set up indirect addresses for faster writing
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 168,  84); // KP
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 170,  85);
@@ -57,7 +59,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 //	dxl_bus_1.SetPosPGain(dxl_ID1[6], 800);
 //	dxl_bus_1.SetPosDGain(dxl_ID1[6], 4000);
 	// controlled setup to send fingers to zero joint angles
-	float home_joint_pos[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+	float home_joint_pos[7] = {-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 	int32_t home_motor_pos[7];
 	JointPos2MotorPos(home_joint_pos, home_motor_pos);
 //	int32_t pos1[3];
@@ -81,7 +83,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.SetPosPGain(dxl_ID1[i], 0);
 		dxl_bus_1.SetPosDGain(dxl_ID1[i], 0);
 		if(DXL_MODE!=0x00){ dxl_bus_1.SetGoalCurrent(dxl_ID1[i], 1193); }
-//		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 300);
+		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 250);
 		HAL_Delay(100);
 	}
 
