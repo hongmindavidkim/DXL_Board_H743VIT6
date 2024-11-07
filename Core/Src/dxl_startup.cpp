@@ -24,12 +24,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.TurnOnLED(dxl_ID1[i], 0x00); // turn off LED
 		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
 		dxl_bus_1.SetRetDelTime(dxl_ID1[i],0x02); // 4us delay time
-		if (i==6){
-			dxl_bus_1.SetControlMode(dxl_ID1[i], 0x05);
-		}
-		else{
 		dxl_bus_1.SetControlMode(dxl_ID1[i], DXL_MODE);
-		}
 		// set up indirect addresses for faster writing
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 168,  84); // KP
 		dxl_bus_1.SetIndirectAddress(dxl_ID1[i], 170,  85);
@@ -86,7 +81,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 		dxl_bus_1.SetPosPGain(dxl_ID1[i], 0);
 		dxl_bus_1.SetPosDGain(dxl_ID1[i], 0);
 		if(DXL_MODE!=0x00){ dxl_bus_1.SetGoalCurrent(dxl_ID1[i], 1193); }
-		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 300);
+//		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 300);
 		HAL_Delay(100);
 	}
 
