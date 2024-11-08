@@ -55,7 +55,7 @@ float joint_tau[7];
 
 // joint-space commands
 float joint_tau_des[7];
-float joint_pos_des[7] = {-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+float joint_pos_des[7] = {0.0f, 0.4f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f}; // [1],[2] 0.4f -0.4f for left -0.4f 0.4f for right
 float joint_vel_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_tau_ff[7]  = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_kp[7]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
@@ -224,16 +224,16 @@ else{
 				motor_kd[i] = 0;
 			}
 				motor_kp[6] = 1000;
-				motor_kd[6] = 300;
+				motor_kd[6] = 4700;
 //				motor_cur_des[6] = 800;
 		}
-		eval_time[1] = __HAL_TIM_GET_COUNTER(&htim1); //Joint space Impedance Controller Calculation
-		__HAL_TIM_SET_COUNTER(&htim1,0);
+//		eval_time[1] = __HAL_TIM_GET_COUNTER(&htim1); //Joint space Impedance Controller Calculation
+//		__HAL_TIM_SET_COUNTER(&htim1,0);
 
 		// send commands
 //		__HAL_TIM_SET_COUNTER(&htim1,0);
 		SetFullControlCommands_DMA();
-		eval_time[2] = __HAL_TIM_GET_COUNTER(&htim1); // Send Control
+//		eval_time[2] = __HAL_TIM_GET_COUNTER(&htim1); // Send Control
 	}
 }
 }

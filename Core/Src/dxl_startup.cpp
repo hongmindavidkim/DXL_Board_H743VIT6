@@ -59,7 +59,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 //	dxl_bus_1.SetPosPGain(dxl_ID1[6], 800);
 //	dxl_bus_1.SetPosDGain(dxl_ID1[6], 4000);
 	// controlled setup to send fingers to zero joint angles
-	float home_joint_pos[7] = {-0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+	float home_joint_pos[7] = {0.0f, 0.4f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f};
 	int32_t home_motor_pos[7];
 	JointPos2MotorPos(home_joint_pos, home_motor_pos);
 //	int32_t pos1[3];
@@ -80,8 +80,8 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 	for (int i=0; i<idLength1; i++) {
 		dxl_bus_1.SetVelocityProfile(dxl_ID1[i], 0);
 		dxl_bus_1.SetAccelerationProfile(dxl_ID1[i], 0);
-		dxl_bus_1.SetPosPGain(dxl_ID1[i], 0);
-		dxl_bus_1.SetPosDGain(dxl_ID1[i], 0);
+//		dxl_bus_1.SetPosPGain(dxl_ID1[i], 0);
+//		dxl_bus_1.SetPosDGain(dxl_ID1[i], 0);
 		if(DXL_MODE!=0x00){ dxl_bus_1.SetGoalCurrent(dxl_ID1[i], 1193); }
 		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 250);
 		HAL_Delay(100);
