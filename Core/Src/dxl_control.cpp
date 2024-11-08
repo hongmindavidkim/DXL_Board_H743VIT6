@@ -58,8 +58,8 @@ float joint_tau_des[7];
 float joint_pos_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_vel_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_tau_ff[7]  = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-float joint_kp[7]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
-float joint_kd[7]      = {0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f};
+float joint_kp[7]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 1.5f};
+float joint_kd[7]      = {0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.02f, 0.05f};
 
 // motor-space states
 int32_t motor_pos[7];
@@ -235,9 +235,12 @@ else{
 	}
 	else{
 		for(int i=6; i<7; i++)  {
+//			 joint_tau_des[i] = joint_kp[i]*(joint_pos_des[i]-joint_pos[i])
+//			 						+ joint_kd[i]*(joint_vel_des[i]-joint_vel[i])
+//										+ joint_tau_ff[i];
 			 joint_tau_des[i] = joint_kp[i]*(joint_pos_des[i]-joint_pos[i])
-			 						+ joint_kd[i]*(joint_vel_des[i]-joint_vel[i])
-										+ joint_tau_ff[i];
+			 						+ joint_kd[i]*(joint_vel_des[i]-joint_vel[i]);
+//			joint_tau_des[i] = joint_tau_ff[i];
 		}
 		// convert to desired torques in motor-space
 		JointTau2MotorTau(joint_tau_des, motor_tau_des);
@@ -251,7 +254,7 @@ else{
 			motor_pos_des[i] = 0;
 			motor_vel_des[i] = 0;
 			motor_kp[i] = 0;
-			motor_kd[i] = 200;
+			motor_kd[i] = 0;
 		}
 	}
 //	printf("Motor Current Command: %d \n\f", motor_cur_des[6]);
