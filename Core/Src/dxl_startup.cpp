@@ -5,7 +5,7 @@ extern XM430_bus dxl_bus_1;
 extern uint8_t dxl_ID1[];
 extern uint8_t idLength1;
 extern uint8_t DXL_MODE;
-float home_joint_pos[7] = {0.0f, -0.4f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f}; //0.4 -0.4 for left // -0.4 0.4 for right
+float home_joint_pos[7] = {0.0f, 0.4f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f}; //0.4 -0.4 for left // -0.4 0.4 for right
 
 
 void Dynamixel_Shutdown_Routine(){
