@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include "string.h"
 #include "math.h"
-
 #include "math_ops.h"
 #include "crc.h"
 #include <XM430_bus.h>
@@ -47,7 +46,7 @@ volatile uint8_t tx_flag_1;
 
 volatile uint8_t rx_flag_1;
 
-
+extern float home_joint_pos[7];
 // joint-space states
 float joint_pos[7];
 float joint_vel[7];
@@ -55,7 +54,7 @@ float joint_tau[7];
 
 // joint-space commands
 float joint_tau_des[7];
-float joint_pos_des[7] = {0.0f, 0.4f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f}; // [1],[2] 0.4f -0.4f for left -0.4f 0.4f for right
+float joint_pos_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // [1],[2] 0.4f -0.4f for left -0.4f 0.4f for right
 float joint_vel_des[7] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_tau_ff[7]  = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 float joint_kp[7]      = {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};
@@ -316,6 +315,7 @@ int dxl_main(void)
 	if (SENSOR_DEBUG) {
 		printf("Starting in sensor debug mode.\n\r");
 	}
+	memcpy(joint_pos_des, home_joint_pos, sizeof(home_joint_pos)); //copying initial vals
 
 	// enable CAN Interrupts
 	HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0); // Initialize CAN1 Rx0 Interrupt

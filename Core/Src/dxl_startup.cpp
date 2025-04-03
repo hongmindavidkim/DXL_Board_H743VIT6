@@ -2,13 +2,11 @@
 #include "main.h"
 
 extern XM430_bus dxl_bus_1;
-
 extern uint8_t dxl_ID1[];
-
 extern uint8_t idLength1;
-
-
 extern uint8_t DXL_MODE;
+float home_joint_pos[7] = {0.0f, -0.4f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f}; //0.4 -0.4 for left // -0.4 0.4 for right
+
 
 void Dynamixel_Shutdown_Routine(){
 	// disable all of the motors
@@ -51,15 +49,14 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 
 	// set smooth DXL profile
 	for (int i=0; i<idLength1; i++) {
-		dxl_bus_1.SetVelocityProfile(dxl_ID1[i], 414); // 414(94.81RPM) @ 14.8V, 330(75.57RPM) @ 12V
-		dxl_bus_1.SetAccelerationProfile(dxl_ID1[i], 100); // 80(17166) rev/min^2
+		dxl_bus_1.SetVelocityProfile(dxl_ID1[i], 40); // 414(94.81RPM) @ 14.8V, 330(75.57RPM) @ 12V
+		dxl_bus_1.SetAccelerationProfile(dxl_ID1[i], 15); // 80(17166) rev/min^2
 		HAL_Delay(100);
 	}
 //	dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 800);
 //	dxl_bus_1.SetPosPGain(dxl_ID1[6], 800);
 //	dxl_bus_1.SetPosDGain(dxl_ID1[6], 4000);
 	// controlled setup to send fingers to zero joint angles
-	float home_joint_pos[7] = {0.0f, 0.4f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f};
 	int32_t home_motor_pos[7];
 	JointPos2MotorPos(home_joint_pos, home_motor_pos);
 //	int32_t pos1[3];
@@ -73,7 +70,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 //	pos3[1] = home_motor_pos[7];
 	if (!torque_disable){
 		dxl_bus_1.SetMultGoalPositions(dxl_ID1, idLength1, (uint32_t*)home_motor_pos);
-		HAL_Delay(1000);
+		HAL_Delay(3000);
 	}
 
 	// re-set to fast DXL profile, if not in current control mode set current limit
