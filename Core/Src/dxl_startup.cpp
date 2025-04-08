@@ -6,14 +6,24 @@ extern uint8_t dxl_ID1[];
 extern uint8_t idLength1;
 extern uint8_t DXL_MODE;
 float home_joint_pos[7] = {0.0f, 0.4f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f}; //0.4 -0.4 for left // -0.4 0.4 for right
-
+float end_joint_pos[7] = {0.0f, 1.57f, -1.57f, 0.0f, 0.0f, 0.0f, 0.0f};//1.57, -1.57 for left // -1.57, 1.57 for right
 
 void Dynamixel_Shutdown_Routine(){
 	// disable all of the motors
+//	for (int i=0; i<idLength1; i++) {
+//		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
+//		HAL_Delay(10);
+//	}
 	for (int i=0; i<idLength1; i++) {
-		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
+		dxl_bus_1.SetVelocityProfile(dxl_ID1[i], 40); // 414(94.81RPM) @ 14.8V, 330(75.57RPM) @ 12V
+		dxl_bus_1.SetAccelerationProfile(dxl_ID1[i], 15); // 80(17166) rev/min^2
 		HAL_Delay(10);
 	}
+	int32_t end_motor_pos[7];
+	JointPos2MotorPos(end_joint_pos, end_motor_pos);
+	dxl_bus_1.SetMultGoalPositions(dxl_ID1, idLength1, (uint32_t*)end_motor_pos);
+	HAL_Delay(3000);
+
 }
 
 void Dynamixel_Startup_Routine (bool torque_disable){

@@ -131,7 +131,7 @@ void XM430_bus::sendIPacket()
 void XM430_bus::getRPacket()
 {
 
-//    delay_us(10); // same as delay in sendIPacket(); // Changed to 10us by David
+    delay_us(10); // same as delay in sendIPacket(); // Changed to 10us by David
     HAL_StatusTypeDef status;
     status = HAL_UART_Receive(sbus, rPacket, rPacketLength, timeout_ms);
 //    printf("%x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x\n\r", rPacket[0],rPacket[1],rPacket[2],rPacket[3],rPacket[4],rPacket[5],rPacket[6],rPacket[7],rPacket[8],rPacket[9],rPacket[10],rPacket[11],rPacket[12]);

@@ -47,6 +47,7 @@ volatile uint8_t tx_flag_1;
 volatile uint8_t rx_flag_1;
 
 extern float home_joint_pos[7];
+extern float end_joint_pos[7];
 // joint-space states
 float joint_pos[7];
 float joint_vel[7];
@@ -328,6 +329,7 @@ int dxl_main(void)
 
 	int loop_count = 0;
 	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+	printf("Entering While loop!");
 	while (1)
 	{
 		// just blink the LED in sensor debug mode
@@ -374,7 +376,7 @@ int dxl_main(void)
 				joint_kp[i] = 0.5f;
 				joint_kd[i] = 0.02f;
 			}
-
+			memcpy(joint_pos_des, end_joint_pos, sizeof(end_joint_pos));
 			// turn on LEDs
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
