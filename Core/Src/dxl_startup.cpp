@@ -5,13 +5,12 @@ extern XM430_bus dxl_bus_1;
 extern uint8_t dxl_ID1[];
 extern uint8_t idLength1;
 extern uint8_t DXL_MODE;
-float home_joint_pos[7] = {0.0f, 0.4f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f}; //0.4 -0.4 for left // -0.4 0.4 for right
-float end_joint_pos[7] = {0.0f, 1.57f, -1.57f, 0.0f, 0.0f, 0.0f, 0.0f};//1.57, -1.57 for left // -1.57, 1.57 for right
+float home_joint_pos[7] = {0.0f, HOME_JOINT_POS_1, HOME_JOINT_POS_2, 0.0f, 0.0f, 0.0f, 0.0f}; //0.4 -0.4 for left // -0.4 0.4 for right
+float end_joint_pos[7] = {0.0f, END_JOINT_POS_1, END_JOINT_POS_2, 0.0f, 0.0f, 0.0f, 0.0f};//1.57, -1.57 for left // -1.57, 1.57 for right
 
 void Dynamixel_Shutdown_Routine(){
 	// disable all of the motors
 //	for (int i=0; i<idLength1; i++) {
-//		dxl_bus_1.SetTorqueEn(dxl_ID1[i],0x00);
 //		HAL_Delay(10);
 //	}
 	for (int i=0; i<idLength1; i++) {
