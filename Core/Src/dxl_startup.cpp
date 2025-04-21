@@ -89,7 +89,7 @@ void Dynamixel_Startup_Routine (bool torque_disable){
 //		dxl_bus_1.SetPosPGain(dxl_ID1[i], 0);
 //		dxl_bus_1.SetPosDGain(dxl_ID1[i], 0);
 		if(DXL_MODE!=0x00){ dxl_bus_1.SetGoalCurrent(dxl_ID1[i], 1193); }
-		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 250);
+		dxl_bus_1.SetGoalCurrent(dxl_ID1[6], 350); // for ALOHA end effector
 		HAL_Delay(100);
 	}
 
