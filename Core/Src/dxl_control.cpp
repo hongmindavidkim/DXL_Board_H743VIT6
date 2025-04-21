@@ -13,8 +13,8 @@
 
 // defines
 #define VERSION_NUMBER 	1.21f
-#define MOTOR_KT 		3.7f/2.7f 	// TODO: replace this!
-#define MOTOR_CUR_LIM 	2.7f 		// TODO: replace this!
+#define MOTOR_KT 		4.1f/2.7f 	// TODO: replace this! For Aloha xm430-w350 endeffector
+#define MOTOR_CUR_LIM 	2.7f 		// TODO: replace this! For Aloha xm430-w350 endeffector
 
 #define cur_count2amp(x) (x*(2.69f/1000.0f))
 #define cur_amp2count(x) (int16_t)(x*(1000.0f/2.69f))
@@ -448,7 +448,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *canHandle, uint32_t RxFifo0I
 //		    printf("getting cmds!\r\n");
 		}
 		// Mode select message
-		else if(id==80){
+		else if(id==78){
 			if(rxBuf_joints[7] == 0xFC){
 				CURR_CONTROL = true;
 				MODE_SELECTED = true;

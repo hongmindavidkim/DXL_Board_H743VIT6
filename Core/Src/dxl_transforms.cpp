@@ -90,18 +90,31 @@ void JointTau2MotorTau(float* joint_tau_in, float* motor_tau_out){
     }
 }
 
-// transform torques from motor-space to joint-space
+//// transform torques from motor-space to joint-space
+//void MotorTau2JointTau(float* motor_tau_in, float* joint_tau_out){
+//    // motor_tau_in: 0:mcp_l, 1:pip_l, 2:dip_l, 3:mcr_l, 4:mcp_r, 5:pip_r, 6:dip_r, 7:mcr_r
+//    // joint_tau_out: same as motor_tau_in
+//
+//    // joint_tau = Jact^T * motor_tau
+//    for(int i=0; i<4; i++){
+//        // Left finger
+//		joint_tau_out[i] = JactL[0][i]*motor_tau_in[0] + JactL[1][i]*motor_tau_in[1]
+//                            + JactL[2][i]*motor_tau_in[2] + JactL[3][i]*motor_tau_in[3];
+//        // Right finger
+//		joint_tau_out[i] = JactR[0][i]*motor_tau_in[4] + JactR[1][i]*motor_tau_in[5]
+//                            + JactR[2][i]*motor_tau_in[6] + JactR[3][i]*motor_tau_in[7];
+//	}
+//}
+
 void MotorTau2JointTau(float* motor_tau_in, float* joint_tau_out){
     // motor_tau_in: 0:mcp_l, 1:pip_l, 2:dip_l, 3:mcr_l, 4:mcp_r, 5:pip_r, 6:dip_r, 7:mcr_r
     // joint_tau_out: same as motor_tau_in
 
     // joint_tau = Jact^T * motor_tau
-    for(int i=0; i<4; i++){
+    for(int i=0; i<6; i++){
         // Left finger
-		joint_tau_out[i] = JactL[0][i]*motor_tau_in[0] + JactL[1][i]*motor_tau_in[1] 
-                            + JactL[2][i]*motor_tau_in[2] + JactL[3][i]*motor_tau_in[3];
-        // Right finger
-		joint_tau_out[i] = JactR[0][i]*motor_tau_in[4] + JactR[1][i]*motor_tau_in[5] 
-                            + JactR[2][i]*motor_tau_in[6] + JactR[3][i]*motor_tau_in[7];
+		joint_tau_out[i] = 0;
 	}
+    	joint_tau_out[6] = motor_tau_in[6];
 }
+

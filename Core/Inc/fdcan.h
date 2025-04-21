@@ -90,12 +90,12 @@ extern FDCAN_HandleTypeDef hfdcan1;
 #define KP_MAX 500.0f
 #define KD_MIN 0.0f
 #define KD_MAX 10.0f
-#define T_MIN -72.0f
-#define T_MAX 72.0f
+#define T_MIN -5.0f // Changed for ALOHA
+#define T_MAX 5.0f // Changed for ALOHA
 
 #define KP_SCALE 50.0f
 #define KD_SCALE 50.0f
-#define T_SCALE 50.0f
+#define T_SCALE 1.0f //Changed for ALOHA
 
 // new limits for force sensors, need to test these!
 #define FT_MIN -20.0f

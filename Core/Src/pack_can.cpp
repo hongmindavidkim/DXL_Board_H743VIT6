@@ -7,6 +7,7 @@
 
 #include <pack_can.h>
 #include "fdcan.h"
+#define DOF 7
 
 /// CAN Reply Packet Structure ///
 /// 16 bit position, between -4*pi and 4*pi
@@ -34,18 +35,18 @@ void pack_reply(uint8_t *msg, int dxl_id, float p, float v, float t){
 /// CAN FD Reply Packet Structure ///
 // 8 typical CAN packets in a row, 5*8=40bytes
 void pack_reply48_joints(uint8_t* fdmsg, float* p, float* v, float* t){
-	int p_int[9];
-	int v_int[9];
-	int t_int[9];
+	int p_int[DOF];
+	int v_int[DOF];
+	int t_int[DOF];
 
-	for (int i=0; i<9; i++){
+	for (int i=0; i<DOF; i++){
 		p_int[i] = float_to_uint(p[i],P_MIN, P_MAX, 16);
 		v_int[i] = float_to_uint(v[i],V_MIN, V_MAX, 12);
 		t_int[i] = float_to_uint(t[i]*T_SCALE, -T_MAX, T_MAX, 12);
 	}
 
 	int k = 0;
-	for (int j=0; j<9; j++){ // 40 bytes total
+	for (int j=0; j<DOF; j++){ // 40 bytes total
 		fdmsg[k] = p_int[j]>>8;
 		fdmsg[k+1] = p_int[j]&0xFF;
 		fdmsg[k+2] = v_int[j]>>4;
