@@ -31,12 +31,8 @@ uint32_t eval_time[4] = {0, 0, 0, 0}; // for timing and debugging
 // Initialize CAN FD stuff
 FDCAN_RxHeaderTypeDef rxMsg_joints;
 FDCAN_TxHeaderTypeDef txHeader_joints;
-FDCAN_TxHeaderTypeDef txHeader_sensors;
-FDCAN_FilterTypeDef canFilt_en;
 FDCAN_FilterTypeDef canFilt_joints;
 uint8_t txMsg_joints[48];
-uint8_t txMsg_sensor_enable[48];
-uint8_t txMsg_sensor_disable[48];
 uint8_t rxBuf_joints[48];
 
 // Initialize dynamixel stuff
@@ -164,7 +160,11 @@ void SetFullControlCommands_DMA()
 
 // run motor control laws
 void updateBusses(){
-
+if(HAND_RESET){
+	HAL_TIM_Base_Stop_IT(&htim2);
+	HAL_TIM_Base_Stop_IT(&htim3);
+}
+else{
 	// start by getting new data from the motors
 //	__HAL_TIM_SET_COUNTER(&htim1,0);
 //	eval_time[0] = __HAL_TIM_GET_COUNTER(&htim1);
@@ -260,6 +260,7 @@ void updateBusses(){
 //	printf("Motor Current Command: %d \n\f", motor_cur_des[6]);
 	SetFullControlCommands_DMA();
 }
+}
 
 // compile and send CAN message with joint data
 void sendCAN(){
@@ -278,7 +279,7 @@ int dxl_main(void)
 	printf("Version No: %.2f\r\n\n\n", VERSION_NUMBER);
 
 	// Tx Headers
-	txHeader_joints.Identifier = TX_JOINTS;
+	txHeader_joints.Identifier = 0x01;
 	txHeader_joints.IdType = FDCAN_STANDARD_ID;
 	txHeader_joints.TxFrameType = FDCAN_DATA_FRAME;
 	txHeader_joints.DataLength = FDCAN_DLC_BYTES_48;
@@ -288,45 +289,21 @@ int dxl_main(void)
 	txHeader_joints.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	txHeader_joints.MessageMarker = 0;
 
-	txHeader_sensors.Identifier = ENABLE_COMMAND;
-	txHeader_sensors.IdType = FDCAN_STANDARD_ID;
-	txHeader_sensors.TxFrameType = FDCAN_DATA_FRAME;
-	txHeader_sensors.DataLength = FDCAN_DLC_BYTES_48;
-	txHeader_sensors.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-	txHeader_sensors.BitRateSwitch = FDCAN_BRS_ON;
-	txHeader_sensors.FDFormat = FDCAN_FD_CAN;
-	txHeader_sensors.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
-	txHeader_sensors.MessageMarker = 0;
-	txMsg_sensor_enable[7] = 0xFE;
-	txMsg_sensor_disable[7] = 0xEF;
-
 	// Rx Filters
-	canFilt_en.IdType = FDCAN_STANDARD_ID;
-	canFilt_en.FilterIndex = 0;
-	canFilt_en.FilterType = FDCAN_FILTER_MASK;
-	canFilt_en.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-	canFilt_en.FilterID1 = ENABLE_COMMAND;
-	canFilt_en.FilterID2 = 0x7FF;
-
 	canFilt_joints.IdType = FDCAN_STANDARD_ID;
-	canFilt_joints.FilterIndex = 1;
-	canFilt_joints.FilterType = FDCAN_FILTER_DUAL;
+	canFilt_joints.FilterIndex = 0;
+	canFilt_joints.FilterType = FDCAN_FILTER_MASK;
 	canFilt_joints.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-	canFilt_joints.FilterID1 = LEFT_FINGER_COMMAND;
-	canFilt_joints.FilterID2 = RIGHT_FINGER_COMMAND;
-
-	// configure specific filters
-	if (HAL_FDCAN_ConfigFilter(&hfdcan1, &canFilt_en) != HAL_OK)
-	{
-		printf("Error in filter config. CAN FD1 \n\r");
-		Error_Handler();
-	}
+	canFilt_joints.FilterID1 = 0x00;
+	canFilt_joints.FilterID2 = 0x00;
+	canFilt_joints.RxBufferIndex = 0;
 
 	if (HAL_FDCAN_ConfigFilter(&hfdcan1, &canFilt_joints) != HAL_OK)
 	{
 		printf("Error in filter config. CAN FD1 \n\r");
 		Error_Handler();
 	}
+
 
 	if ((HAL_FDCAN_Start(&hfdcan1)) != HAL_OK ) // Initialize CAN Bus
 	{
@@ -343,12 +320,12 @@ int dxl_main(void)
 
 	while (!MODE_SELECTED){
 		HAL_Delay(500);
-		printf("Waiting for Mode Select...\n\r");
+		printf("Waiting for Mode Select..\n\r");
 		HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 	}
 	HAND_RESET = false; // this flag doesn't need to be set this time
 	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-	printf("Mode Selected.\n\r");
+	printf("Mode Selected..\n\r");
 	HAL_FDCAN_DeactivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE);
 
 	if (CURR_CONTROL) {
@@ -366,9 +343,6 @@ int dxl_main(void)
 
 	// enable CAN Interrupts
 	HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0); // Initialize CAN1 Rx0 Interrupt
-
-	// start sensor board
-	HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &txHeader_sensors, txMsg_sensor_enable);
 
 	// enable Timer Interrupts
 	HAL_NVIC_EnableIRQ(TIM2_IRQn);
@@ -391,35 +365,19 @@ int dxl_main(void)
 		}
 		// check for gripper reset flag
 		if (HAND_RESET){
-
 			// deactivate all of the interrupts
 			// disable CAN Interrupts
 			HAL_FDCAN_DeactivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE);
 			// disable Timer Interrupts
 			HAL_TIM_Base_Stop_IT(&htim2);
 			HAL_TIM_Base_Stop_IT(&htim3);
-			// stop sensor board
-			HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &txHeader_sensors, txMsg_sensor_disable);
 
 			// turn off some LEDs
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 
-			// special handling of the disable message
-			if (!MODE_SELECTED){
-				Dynamixel_Shutdown_Routine();
-				HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
-				HAL_Delay(100);
-				while (!MODE_SELECTED){
-					HAL_Delay(500);
-					printf("Waiting for Mode Select...\n\r");
-					HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-				}
-			}
-
 			// re-run the startup routine
 			printf("Received new mode. Re-starting motors.\n\r");
-			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
 			if (MODE_SELECTED) {
 				if (CURR_CONTROL) {
 					DXL_MODE = CURRENT_POS_CONTROL;
@@ -427,6 +385,9 @@ int dxl_main(void)
 				// start by disabling all of the motors
 				Dynamixel_Shutdown_Routine();
 				Dynamixel_Startup_Routine(SENSOR_DEBUG); // in debug mode, the dynamixels will be disabled
+			} else {
+				// disable message was received
+				Dynamixel_Shutdown_Routine();
 			}
 
 			// reset CAN commands
@@ -439,7 +400,7 @@ int dxl_main(void)
 			}
 
 			// turn on LEDs
-
+			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
 			// reset flag
 			HAND_RESET = false;
@@ -447,8 +408,6 @@ int dxl_main(void)
 			// and reactivate the interrupts
 			// enable CAN Interrupts
 			HAL_FDCAN_ActivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE,0);
-			// restart sensor board
-			HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &txHeader_sensors, txMsg_sensor_enable);
 			// enable Timer Interrupts
 			HAL_TIM_Base_Start_IT(&htim2);
 			HAL_TIM_Base_Start_IT(&htim3);
@@ -496,7 +455,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *canHandle, uint32_t RxFifo0I
 	if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET){
 		HAL_FDCAN_GetRxMessage(canHandle, FDCAN_RX_FIFO0, &rxMsg_joints, rxBuf_joints);
 		uint32_t id = rxMsg_joints.Identifier;
-<<<<<<< HEAD
 
 		//All Axes Aloha
 		if(id == 79) {
@@ -521,83 +479,33 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *canHandle, uint32_t RxFifo0I
 		        joint_tau_ff[j] = uint_to_float(t_int[j], T_MIN, T_MAX, 12);
 		    }
 //		    printf("getting cmds!\r\n");
-=======
-		// Left finger
-		if(id==LEFT_FINGER_COMMAND){
-			int p_int[4], v_int[4], kp_int[4], kd_int[4], t_int[4];
-			for(int i=0;i<4;i++){
-				p_int[i] = (rxBuf_joints[i*8+0]<<8)|rxBuf_joints[i*8+1];
-				v_int[i] = (rxBuf_joints[i*8+2]<<4)|(rxBuf_joints[i*8+3]>>4);
-				kp_int[i] = ((rxBuf_joints[i*8+3]&0xF)<<8)|rxBuf_joints[i*8+4];
-				kd_int[i] = (rxBuf_joints[i*8+5]<<4)|(rxBuf_joints[i*8+6]>>4);
-				t_int[i] = ((rxBuf_joints[i*8+6]&0xF)<<8)|rxBuf_joints[i*8+7];
-			}
-			for(int j=0;j<4;j++){
-				joint_pos_des[j] = uint_to_float(p_int[j], P_MIN, P_MAX, 16);
-				joint_vel_des[j] = uint_to_float(v_int[j], V_MIN, V_MAX, 12);
-				joint_kp[j] = uint_to_float(kp_int[j], KP_MIN, KP_MAX, 12)/KP_SCALE;
-				joint_kd[j] = uint_to_float(kd_int[j], KD_MIN, KD_MAX, 12)/KD_SCALE;
-				joint_tau_ff[j] = uint_to_float(t_int[j], T_MIN, T_MAX, 12)/T_SCALE;
-			}
-		}
-		// Right finger
-		else if(id==RIGHT_FINGER_COMMAND){
-			int p_int[4], v_int[4], kp_int[4], kd_int[4], t_int[4];
-			for(int i=0;i<4;i++){
-				p_int[i] = (rxBuf_joints[i*8+0]<<8)|rxBuf_joints[i*8+1];
-				v_int[i] = (rxBuf_joints[i*8+2]<<4)|(rxBuf_joints[i*8+3]>>4);
-				kp_int[i] = ((rxBuf_joints[i*8+3]&0xF)<<8)|rxBuf_joints[i*8+4];
-				kd_int[i] = (rxBuf_joints[i*8+5]<<4)|(rxBuf_joints[i*8+6]>>4);
-				t_int[i] = ((rxBuf_joints[i*8+6]&0xF)<<8)|rxBuf_joints[i*8+7];
-			}
-			for(int j=0;j<4;j++){
-				joint_pos_des[j+4] = uint_to_float(p_int[j], P_MIN, P_MAX, 16);
-				joint_vel_des[j+4] = uint_to_float(v_int[j], V_MIN, V_MAX, 12);
-				joint_kp[j+4] = uint_to_float(kp_int[j], KP_MIN, KP_MAX, 12)/KP_SCALE;
-				joint_kd[j+4] = uint_to_float(kd_int[j], KD_MIN, KD_MAX, 12)/KD_SCALE;
-				joint_tau_ff[j+4] = uint_to_float(t_int[j], T_MIN, T_MAX, 12)/T_SCALE;
-			}
->>>>>>> 97c616c322ae4a2f076bd0b6fd7162a9d21bfc95
 		}
 		// Mode select message
-		else if(id==ENABLE_COMMAND){
-			if(rxBuf_joints[7] == MS_CUR_CTRL){ // current control
+		else if(id==80){
+			if(rxBuf_joints[7] == 0xFC){
 				CURR_CONTROL = true;
 				MODE_SELECTED = true;
 				SENSOR_DEBUG = false;
 				HAND_RESET = true;
-				HAL_TIM_Base_Stop_IT(&htim2);
-				HAL_TIM_Base_Stop_IT(&htim3);
-				HAL_FDCAN_DeactivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE);
 			}
-			else if (rxBuf_joints[7] == MS_POS_CTRL){ // position control
+			else if (rxBuf_joints[7] == 0xFD){
 				CURR_CONTROL = false;
 				MODE_SELECTED = true;
 				SENSOR_DEBUG = false;
 				HAND_RESET = true;
-				HAL_TIM_Base_Stop_IT(&htim2);
-				HAL_TIM_Base_Stop_IT(&htim3);
-				HAL_FDCAN_DeactivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE);
 			}
-			else if (rxBuf_joints[7] == MS_SENSE_DEBUG){ // sensor debug
+			else if (rxBuf_joints[7] == 0xFB){
 				CURR_CONTROL = false;
 				MODE_SELECTED = true;
 				SENSOR_DEBUG = true;
 				HAND_RESET = true;
-				HAL_TIM_Base_Stop_IT(&htim2);
-				HAL_TIM_Base_Stop_IT(&htim3);
-				HAL_FDCAN_DeactivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE);
 			}
-			else if (rxBuf_joints[7] == MS_DISABLE){ // disable command
+			else if (rxBuf_joints[7] == 0xFA){
 				CURR_CONTROL = false;
 				MODE_SELECTED = false;
 				SENSOR_DEBUG = false;
 				HAND_RESET = true;
-				HAL_TIM_Base_Stop_IT(&htim2);
-				HAL_TIM_Base_Stop_IT(&htim3);
-				HAL_FDCAN_DeactivateNotification(&hfdcan1,FDCAN_IT_RX_FIFO0_NEW_MESSAGE);
 			}
-
 		}
 	}
 }

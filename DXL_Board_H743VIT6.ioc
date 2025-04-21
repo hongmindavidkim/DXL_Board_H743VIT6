@@ -64,7 +64,7 @@ FDCAN1.RxBuffersNbr=0
 FDCAN1.RxFifo0ElmtSize=FDCAN_DATA_BYTES_48
 FDCAN1.RxFifo0ElmtsNbr=24
 FDCAN1.RxFifo1ElmtSize=FDCAN_DATA_BYTES_64
-FDCAN1.StdFiltersNbr=2
+FDCAN1.StdFiltersNbr=1
 FDCAN1.TxBuffersNbr=0
 FDCAN1.TxElmtSize=FDCAN_DATA_BYTES_48
 FDCAN1.TxEventsNbr=3
@@ -109,13 +109,8 @@ Mcu.PinsNb=16
 Mcu.ThirdPartyNb=0
 Mcu.UserConstants=
 Mcu.UserName=STM32H743VITx
-<<<<<<< HEAD
 MxCube.Version=6.11.1
 MxDb.Version=DB.6.0.111
-=======
-MxCube.Version=6.10.0
-MxDb.Version=DB.6.0.100
->>>>>>> 97c616c322ae4a2f076bd0b6fd7162a9d21bfc95
 NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
 NVIC.DMA1_Stream0_IRQn=true\:1\:0\:true\:false\:true\:false\:true\:true
 NVIC.DMA1_Stream1_IRQn=true\:1\:0\:true\:false\:true\:false\:true\:true

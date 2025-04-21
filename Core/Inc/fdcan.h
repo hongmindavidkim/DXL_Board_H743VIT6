@@ -36,17 +36,31 @@ extern FDCAN_HandleTypeDef hfdcan1;
 
 /* USER CODE BEGIN Private defines */
 //MAIN BUS CAN
-#define ENABLE_COMMAND			1
-#define	TX_JOINTS				2
-#define TX_SENSORS				3
-#define LEFT_FINGER_COMMAND		4
-#define RIGHT_FINGER_COMMAND	5
+#define CAN_TX_DXL9            0
+#define CAN_TX_DXL1            1 // commands from controller to DXLs
+#define CAN_TX_DXL2            2
+#define CAN_TX_DXL3            3
+#define CAN_TX_DXL4            4
+#define CAN_TX_DXL5            5
+#define CAN_TX_DXL6            6
+#define CAN_TX_DXL7            7
+#define CAN_TX_DXL8            8
 
-// mode select messages
-#define MS_DISABLE				0xFA
-#define MS_SENSE_DEBUG			0xFB
-#define MS_CUR_CTRL				0xFC
-#define MS_POS_CTRL				0xFD
+#define CAN_FORCE_1            9
+#define CAN_FORCE_2            10
+#define CAN_TOF_1              11
+#define CAN_TOF_2              12
+#define CAN_TOF_PALM           22
+
+#define CAN_RX_DXL1            13 // responses from DXLs to controller
+#define CAN_RX_DXL2            14
+#define CAN_RX_DXL3            15
+#define CAN_RX_DXL4            16
+#define CAN_RX_DXL5            17
+#define CAN_RX_DXL6            18
+#define CAN_RX_DXL7            19
+#define CAN_RX_DXL8            20
+#define CAN_RX_DXL9            21
 
 //SENSOR BUS CAN
 #define CAN2_FORCE_1            5
